@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Todo } from '@/types/todo'
+import { useFocusStore } from '@/stores/focusStore'
 import TodoTag from './TodoTag.vue'
 
 const props = defineProps<{
@@ -8,6 +9,15 @@ const props = defineProps<{
   maxDisplay: number
   loading: boolean
 }>()
+
+const emit = defineEmits<{
+  start: [todo: Todo]
+  pause: []
+  resume: []
+  end: [todo: Todo]
+}>()
+
+const focusStore = useFocusStore()
 
 const visibleTodos = computed(() => props.todos.slice(0, props.maxDisplay))
 const hiddenCount = computed(() => Math.max(0, props.todos.length - props.maxDisplay))
@@ -34,6 +44,13 @@ const hiddenCount = computed(() => Math.max(0, props.todos.length - props.maxDis
         v-for="todo in visibleTodos"
         :key="todo.id"
         :todo="todo"
+        :is-active="focusStore.activeTodoId === todo.id && focusStore.isTimerActive"
+        :is-paused="focusStore.isPaused && focusStore.activeTodoId === todo.id"
+        :is-other-active="focusStore.hasActiveTodo && focusStore.activeTodoId !== todo.id"
+        @start="emit('start', $event)"
+        @pause="emit('pause')"
+        @resume="emit('resume')"
+        @end="emit('end', $event)"
       />
 
       <!-- 超出上限时显示省略号 -->

@@ -11,6 +11,8 @@ export const useFocusStore = defineStore('focus', () => {
   // --- State ---
   const status = ref<FocusStatus>('idle')
   const currentSession = ref<FocusSession | null>(null)
+  /** 当前激活的 TODO ID（双击启动专注时绑定） */
+  const activeTodoId = ref<string | null>(null)
   const recentSessions = ref<FocusSession[]>([])
   const todayStats = ref<TodayFocusStats | null>(null)
   const loading = ref(false)
@@ -24,20 +26,36 @@ export const useFocusStore = defineStore('focus', () => {
   const isCompleted = computed(() => status.value === 'completed')
   const todayMinutes = computed(() => todayStats.value?.totalMinutes ?? 0)
   const todaySessionCount = computed(() => todayStats.value?.sessionCount ?? 0)
+  const hasActiveTodo = computed(() => activeTodoId.value !== null)
 
-  /** 计时器是否在运行中（用于按钮状态） */
+  /** 计时器是否在运行中 */
   const isTimerActive = computed(
-    () => timer.status.value === 'running' || timer.status.value === 'paused' || timer.status.value === 'overtime',
+    () =>
+      timer.status.value === 'running' ||
+      timer.status.value === 'paused' ||
+      timer.status.value === 'overtime',
   )
 
   // --- Actions ---
 
   /** 开始专注 */
-  async function startFocus(todoId: string | null, plannedDuration: number): Promise<FocusSession | null> {
+  async function startFocus(
+    todoId: string | null,
+    plannedDuration: number,
+  ): Promise<FocusSession | null> {
     error.value = null
+    // 互斥：已有进行中 TODO 时禁止开始其他
+    if (hasActiveTodo.value && todoId !== null && todoId !== activeTodoId.value) {
+      error.value = '已有进行中的 TODO，请先结束它'
+      return null
+    }
     try {
-      const session = (await db.createFocusSession({ todoId, plannedDuration })) as FocusSession
+      const session = (await db.createFocusSession({
+        todoId,
+        plannedDuration,
+      })) as FocusSession
       currentSession.value = session
+      activeTodoId.value = todoId
       status.value = 'focusing'
       timer.start(plannedDuration)
       return session
@@ -59,11 +77,6 @@ export const useFocusStore = defineStore('focus', () => {
     status.value = 'focusing'
   }
 
-  /** 倒计时归零后暂停（等待用户确认继续/结束） */
-  function onCountdownEnd() {
-    timer.pause()
-  }
-
   /** 完成专注 */
   async function completeFocus(notes?: string): Promise<boolean> {
     error.value = null
@@ -79,6 +92,7 @@ export const useFocusStore = defineStore('focus', () => {
         notes: notes ?? '',
       })
       currentSession.value = null
+      activeTodoId.value = null
       status.value = 'idle'
       timer.reset()
       await fetchTodayStats()
@@ -89,7 +103,7 @@ export const useFocusStore = defineStore('focus', () => {
     }
   }
 
-  /** 异常结束专注（"我还在"超时未点击） */
+  /** 异常结束专注 */
   async function abortFocus(): Promise<boolean> {
     error.value = null
     if (!currentSession.value) return false
@@ -103,6 +117,7 @@ export const useFocusStore = defineStore('focus', () => {
         status: 'abnormal',
       })
       currentSession.value = null
+      activeTodoId.value = null
       status.value = 'idle'
       timer.reset()
       return true
@@ -114,10 +129,10 @@ export const useFocusStore = defineStore('focus', () => {
 
   /** 开始休息 */
   function startRest() {
-    // 阶段六实现完整休息逻辑
     status.value = 'idle'
     timer.reset()
     currentSession.value = null
+    activeTodoId.value = null
   }
 
   /** 加载最近的专注会话 */
@@ -144,7 +159,7 @@ export const useFocusStore = defineStore('focus', () => {
   }
 
   return {
-    // Timer (from useTimer)
+    // Timer
     remainingSeconds: timer.remainingSeconds,
     totalElapsed: timer.totalElapsed,
     plannedDuration: timer.plannedDuration,
@@ -155,6 +170,7 @@ export const useFocusStore = defineStore('focus', () => {
     // Focus state
     status,
     currentSession,
+    activeTodoId,
     recentSessions,
     todayStats,
     loading,
@@ -166,13 +182,13 @@ export const useFocusStore = defineStore('focus', () => {
     isOvertime,
     isCompleted,
     isTimerActive,
+    hasActiveTodo,
     todayMinutes,
     todaySessionCount,
     // Actions
     startFocus,
     pauseFocus,
     resumeFocus,
-    onCountdownEnd,
     completeFocus,
     abortFocus,
     startRest,
