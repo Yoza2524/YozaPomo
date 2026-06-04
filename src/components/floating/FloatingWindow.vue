@@ -18,7 +18,7 @@ onMounted(async () => {
 
 <template>
   <div
-    class="floating-bg rounded-floating floating-shadow w-full h-full flex flex-col select-none overflow-hidden"
+    class="w-full h-full flex flex-col select-none overflow-hidden rounded-[16px]"
   >
     <!-- 可拖拽标题栏 -->
     <div
@@ -45,19 +45,4 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.floating-bg {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-.rounded-floating {
-  border-radius: 16px;
-}
-
-.floating-shadow {
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -2px rgba(0, 0, 0, 0.1);
-}
 </style>
