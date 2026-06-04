@@ -1,5 +1,5 @@
 /** 专注状态 */
-export type FocusStatus = 'idle' | 'focusing' | 'paused' | 'completed' | 'abnormal'
+export type FocusStatus = 'idle' | 'focusing' | 'paused' | 'completed' | 'abnormal' | 'resting'
 
 /** 专注会话 */
 export interface FocusSession {

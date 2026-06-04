@@ -24,6 +24,7 @@ export const useFocusStore = defineStore('focus', () => {
   const isIdle = computed(() => status.value === 'idle')
   const isOvertime = computed(() => timer.status.value === 'overtime')
   const isCompleted = computed(() => status.value === 'completed')
+  const isResting = computed(() => status.value === 'resting')
   const todayMinutes = computed(() => todayStats.value?.totalMinutes ?? 0)
   const todaySessionCount = computed(() => todayStats.value?.sessionCount ?? 0)
   const hasActiveTodo = computed(() => activeTodoId.value !== null)
@@ -129,6 +130,14 @@ export const useFocusStore = defineStore('focus', () => {
 
   /** 开始休息 */
   function startRest() {
+    status.value = 'resting'
+    // 使用设置中的休息时长，如果没设置则默认 5 分钟
+    const restDuration = 300 // TODO: 从设置中读取
+    timer.start(restDuration)
+  }
+
+  /** 结束休息 */
+  function endRest() {
     status.value = 'idle'
     timer.reset()
     currentSession.value = null
@@ -181,6 +190,7 @@ export const useFocusStore = defineStore('focus', () => {
     isIdle,
     isOvertime,
     isCompleted,
+    isResting,
     isTimerActive,
     hasActiveTodo,
     todayMinutes,
@@ -192,6 +202,7 @@ export const useFocusStore = defineStore('focus', () => {
     completeFocus,
     abortFocus,
     startRest,
+    endRest,
     fetchRecentSessions,
     fetchTodayStats,
   }
