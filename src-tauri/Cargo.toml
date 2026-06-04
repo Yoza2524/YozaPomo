@@ -25,3 +25,9 @@ serde_json = "1"
 uuid = { version = "1", features = ["v4"] }
 thiserror = "1"
 chrono = { version = "0.4", features = ["clock"] }
+
+[dependencies.windows]
+version = "0.58"
+features = [
+    "Win32_UI_Input_KeyboardAndMouse",
+]

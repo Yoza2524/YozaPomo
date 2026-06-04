@@ -25,6 +25,20 @@
         "visible": true
       },
       {
+        "label": "overlay",
+        "title": "",
+        "width": 800,
+        "height": 600,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false,
+        "center": true
+      },
+      {
         "label": "management",
         "title": "YozaPomo - 管理",
         "width": 900,

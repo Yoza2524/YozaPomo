@@ -93,8 +93,8 @@ function animate(timestamp: number) {
   for (const p of particles) {
     p.x += p.vx
     p.y += p.vy
-    p.vy += 0.03 // 重力
-    p.alpha = Math.max(0, 1 - progress * 1.2)
+    p.vy += 0.012 // 重力（更慢下落）
+    p.alpha = Math.max(0, 1 - progress * 0.8)
 
     if (p.alpha > 0.01) {
       allDone = false
@@ -159,6 +159,6 @@ onUnmounted(() => {
 <template>
   <canvas
     ref="canvasRef"
-    class="particle-canvas absolute inset-0 z-40 pointer-events-none"
+    class="particle-canvas absolute inset-0 pointer-events-none"
   />
 </template>

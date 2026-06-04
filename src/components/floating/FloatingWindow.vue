@@ -8,10 +8,10 @@ import { useSettingsStore } from '@/stores/settingsStore'
 import { useFocusStore } from '@/stores/focusStore'
 import TodoList from './TodoList.vue'
 import FocusButton from './FocusButton.vue'
-import ReminderBanner from './ReminderBanner.vue'
 import NotesModal from './NotesModal.vue'
-import ParticleCanvas from './ParticleCanvas.vue'
 import { playFocusEndSound, playReminderSound } from '@/utils/sound'
+import { emitTo } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/core'
 import { useAutoResize } from '@/composables/useAutoResize'
 
 const todoStore = useTodoStore()
@@ -25,10 +25,6 @@ useAutoResize(contentRef)
 // 笔记弹窗状态
 const showTodoNotes = ref(false)
 const pendingTodoId = ref<string | null>(null)
-
-// 粒子动画
-const showFocusEndParticles = ref(false)
-const showReminderParticles = ref(false)
 
 // 跨窗口事件同步
 let unlistenTodoChanged: UnlistenFn | null = null
@@ -46,11 +42,13 @@ onMounted(async () => {
   unlistenSettingsChanged = await listen('settings-changed', () => {
     settingsStore.loadSettings()
   })
+
 })
 
 onUnmounted(() => {
   if (unlistenTodoChanged) unlistenTodoChanged()
   if (unlistenSettingsChanged) unlistenSettingsChanged()
+  stopReminderInputDetection()
 })
 
 // 专注结束动画（倒计时归零 → 进入超时）
@@ -58,37 +56,69 @@ watch(
   () => focusStore.isOvertime,
   (isOvertime, wasOvertime) => {
     if (isOvertime && !wasOvertime) {
-      showFocusEndParticles.value = true
+      emitTo('overlay', 'show-particle-focus-end')
       playFocusEndSound(settingsStore.notificationSound)
     }
   },
 )
 
-// 5 分钟提醒动画
+// 5 分钟提醒动画 + "还在吗？"文字 + 输入检测
 watch(
   () => focusStore.showReminder,
   (showing) => {
     if (showing) {
-      showReminderParticles.value = true
+      emitTo('overlay', 'show-particle-reminder')
+      emitTo('overlay', 'show-reminder-text')
       playReminderSound(settingsStore.notificationSound)
+      startReminderInputDetection()
+    } else {
+      emitTo('overlay', 'hide-reminder-text')
+      stopReminderInputDetection()
     }
   },
 )
 
-// "我还在"提醒自动消失 → 异常结束
-watch(
-  () => focusStore.showReminder,
-  (showing, wasShowing) => {
-    if (
-      wasShowing &&
-      !showing &&
-      !focusStore.reminderDismissed &&
-      focusStore.isTimerActive
-    ) {
-      focusStore.abortFocus()
+
+const REMINDER_TIMEOUT_MS = 3000 // 3 秒无操作则异常结束（临时；正式为 30000）
+
+let inputCheckTimer: ReturnType<typeof setInterval> | null = null
+
+function startReminderInputDetection() {
+  const startTime = Date.now()
+  let lastInputTick = 0
+
+  inputCheckTimer = setInterval(async () => {
+    if (!focusStore.showReminder) return
+    try {
+      const tick = await invoke<number>('get_last_input_tick')
+      if (lastInputTick === 0) {
+        lastInputTick = tick
+        return
+      }
+      // tick 变了 → 有输入（鼠标或键盘），继续专注
+      if (tick !== lastInputTick) {
+        focusStore.dismissReminder()
+        emitTo('overlay', 'hide-reminder-text')
+        return
+      }
+      // 没有输入 → 检查是否超时
+      if (Date.now() - startTime >= REMINDER_TIMEOUT_MS) {
+        focusStore.dismissReminder()
+        focusStore.abortFocus()
+        emitTo('overlay', 'hide-reminder-text')
+      }
+    } catch {
+      // 忽略调用失败
     }
-  },
-)
+  }, 250)
+}
+
+function stopReminderInputDetection() {
+  if (inputCheckTimer !== null) {
+    clearInterval(inputCheckTimer)
+    inputCheckTimer = null
+  }
+}
 
 // --- TODO 交互事件 ---
 
@@ -141,55 +171,15 @@ function handleTodoNotesCancel() {
   pendingTodoId.value = null
 }
 
-/** 专注结束粒子动画完成 */
-function onFocusEndParticlesDone() {
-  showFocusEndParticles.value = false
-}
-
-/** 提醒粒子动画完成 */
-function onReminderParticlesDone() {
-  showReminderParticles.value = false
-}
 </script>
 
 <template>
   <div ref="contentRef" class="floating-root w-full h-full flex flex-col select-none overflow-hidden rounded-[16px] relative" @contextmenu.prevent>
-    <!-- 专注结束粒子动画 -->
-    <ParticleCanvas
-      v-if="showFocusEndParticles"
-      :count="45"
-      :colors="['#6366f1', '#818cf8', '#22c55e', '#4f46e5', '#a78bfa']"
-      :min-radius="2"
-      :max-radius="6"
-      :duration="2800"
-      :speed="1.2"
-      :from-center="true"
-      @done="onFocusEndParticlesDone"
-    />
-
-    <!-- 提醒粒子动画（小型） -->
-    <ParticleCanvas
-      v-if="showReminderParticles"
-      :count="20"
-      :colors="['#f59e0b', '#fbbf24', '#fcd34d']"
-      :min-radius="1.5"
-      :max-radius="4"
-      :duration="1500"
-      :speed="0.6"
-      :from-center="false"
-      @done="onReminderParticlesDone"
-    />
-
     <!-- 可拖拽标题栏 -->
     <div
       data-tauri-drag-region
       class="flex items-center justify-between px-3 py-4 cursor-default shrink-0"
     >
-    </div>
-
-    <!-- "我还在"提醒 -->
-    <div v-if="focusStore.showReminder" class="px-3">
-      <ReminderBanner />
     </div>
 
     <!-- TODO 标签列表（始终可见） -->

@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import FloatingWindow from '@/components/floating/FloatingWindow.vue'
 import ManagementWindow from '@/components/management/ManagementWindow.vue'
+import ParticleOverlay from '@/components/overlay/ParticleOverlay.vue'
 
 const isDev = import.meta.env.DEV
 const isDevServerAlive = ref(true)
@@ -51,6 +52,9 @@ onUnmounted(() => {
 
   <!-- 悬浮窗 -->
   <FloatingWindow v-else-if="windowLabel === 'floating'" />
+
+  <!-- 粒子动画遮罩层 -->
+  <ParticleOverlay v-else-if="windowLabel === 'overlay'" />
 
   <!-- 管理界面 -->
   <ManagementWindow v-else-if="windowLabel === 'management'" />

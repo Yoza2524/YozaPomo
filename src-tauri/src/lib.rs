@@ -4,7 +4,7 @@ mod utils;
 
 use db::Database;
 use tauri::Manager;
-use tauri::PhysicalPosition;
+use tauri::{LogicalSize, PhysicalPosition};
 
 /// 设置窗口行为：关闭时隐藏而非退出
 fn setup_windows(app: &mut tauri::App) {
@@ -29,6 +29,18 @@ fn setup_windows(app: &mut tauri::App) {
             let y = 40u32; // 距离顶端 40px
             let _ = floating.set_position(PhysicalPosition::new(x as i32, y as i32));
         }
+    }
+
+    // overlay 窗口：全屏、隐藏、鼠标穿透
+    if let Some(overlay) = app.get_webview_window("overlay") {
+        if let Ok(Some(monitor)) = overlay.primary_monitor() {
+            let size = monitor.size();
+            let _ = overlay.set_size(LogicalSize::new(size.width as f64, size.height as f64));
+            let _ = overlay.set_position(PhysicalPosition::new(0, 0));
+        }
+        // Windows 下设置鼠标穿透（点击事件穿透到下方窗口）
+        let _ = overlay.set_ignore_cursor_events(true);
+        let _ = overlay.hide();
     }
 
     // 管理界面：关闭时隐藏而非退出
@@ -70,6 +82,7 @@ pub fn run() {
             commands::settings_commands::get_setting,
             commands::settings_commands::set_setting,
             commands::settings_commands::update_settings,
+            commands::input_commands::get_last_input_tick,
         ])
         .setup(|app| {
             // 初始化数据库
