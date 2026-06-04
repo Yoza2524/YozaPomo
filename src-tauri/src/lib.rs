@@ -4,10 +4,12 @@ mod utils;
 
 use db::Database;
 use tauri::Manager;
+use tauri::PhysicalPosition;
 
-/// 悬浮窗关闭时隐藏而非退出
+/// 设置悬浮窗行为：关闭时隐藏、定位到右上角
 fn setup_windows(app: &mut tauri::App) {
     if let Some(floating) = app.get_webview_window("floating") {
+        // 关闭时隐藏而非退出
         let floating_clone = floating.clone();
         floating.on_window_event(move |event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -15,6 +17,18 @@ fn setup_windows(app: &mut tauri::App) {
                 let _ = floating_clone.hide();
             }
         });
+
+        // 定位到屏幕右上角
+        if let Ok(Some(monitor)) = floating.primary_monitor() {
+            let monitor_size = monitor.size();
+            let window_size = floating.outer_size().unwrap_or(tauri::PhysicalSize {
+                width: 280,
+                height: 360,
+            });
+            let x = monitor_size.width.saturating_sub(window_size.width).saturating_sub(16);
+            let y = 16u32;
+            let _ = floating.set_position(PhysicalPosition::new(x as i32, y as i32));
+        }
     }
 }
 

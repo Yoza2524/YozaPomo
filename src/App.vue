@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import FloatingWindow from '@/components/floating/FloatingWindow.vue'
 
 // YozaPomo 悬浮窗主应用
-// 后续阶段将添加 TODO 标签、专注计时等功能
-
 const isDev = import.meta.env.DEV
 const isDevServerAlive = ref(true)
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null
@@ -27,24 +26,28 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="floating-bg rounded-floating floating-shadow w-[280px] h-[360px] p-4 overflow-hidden">
-    <!-- 开发环境：Vite 服务器断开提示 -->
-    <div
-      v-if="isDev && !isDevServerAlive"
-      class="text-center text-error text-sm mt-20"
-    >
+  <!-- 开发环境：Vite 服务器断开提示 -->
+  <div
+    v-if="isDev && !isDevServerAlive"
+    class="w-[280px] h-[360px] rounded-floating floating-shadow p-4"
+    :style="{ background: 'rgba(255, 255, 255, 0.85)' }"
+  >
+    <div class="text-center text-error text-sm mt-20">
       开发服务器已断开
       <br />
       <span class="text-xs text-gray-400">请重启 pnpm tauri dev</span>
     </div>
-
-    <div v-else class="text-center text-gray-500 text-sm mt-20">
-      YozaPomo v0.1.0
-    </div>
   </div>
+
+  <!-- 正常：悬浮窗 -->
+  <FloatingWindow v-else />
 </template>
 
 <style scoped>
+.rounded-floating {
+  border-radius: 16px;
+}
+
 .floating-shadow {
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
