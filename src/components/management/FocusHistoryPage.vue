@@ -107,6 +107,8 @@ async function handleDelete(session: FocusSession) {
 const statusMap: Record<string, { label: string; type: 'success' | 'error' | 'warning' | 'default' }> = {
   completed: { label: '完成', type: 'success' },
   abnormal: { label: '异常', type: 'error' },
+  focusing: { label: '专注中', type: 'warning' },
+  paused: { label: '已暂停', type: 'default' },
   active: { label: '进行中', type: 'warning' },
 }
 </script>

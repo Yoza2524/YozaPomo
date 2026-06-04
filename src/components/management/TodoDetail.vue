@@ -54,6 +54,8 @@ function sessionDuration(s: FocusSession): string {
 const statusLabels: Record<string, string> = {
   completed: '完成',
   abnormal: '异常',
+  focusing: '专注中',
+  paused: '已暂停',
   active: '进行中',
 }
 const statusTypes: Record<string, 'success' | 'error' | 'default' | 'warning'> = {
@@ -64,7 +66,7 @@ const statusTypes: Record<string, 'success' | 'error' | 'default' | 'warning'> =
 </script>
 
 <template>
-  <div class="w-[640px] max-w-[85vw] max-h-[70vh] overflow-auto p-4">
+  <div class="w-[640px] max-w-[85vw] max-h-[70vh] overflow-auto p-4 bg-white rounded-lg">
     <!-- TODO 基本信息 -->
     <div class="mb-4">
       <h3 class="text-lg font-semibold text-gray-800">{{ todo.title }}</h3>
