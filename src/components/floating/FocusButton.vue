@@ -26,20 +26,6 @@ const countdownText = computed(() => {
 
 const isCountdownPaused = computed(() => focusStore.isPaused)
 
-// --- 进度条 ---
-const progressPercent = computed(() => {
-  const planned = focusStore.plannedDuration
-  const elapsed = focusStore.totalElapsed
-  if (planned <= 0) return 0
-  return Math.min(100, (elapsed / planned) * 100)
-})
-
-const progressColor = computed(() => {
-  if (focusStore.isOvertime) return '#f59e0b'
-  if (progressPercent.value > 80) return '#f59e0b'
-  return '#22c55e'
-})
-
 // --- 是否显示休息按钮 ---
 const showRestButton = computed(() => focusStore.isOvertime)
 
@@ -117,17 +103,6 @@ async function handleRest() {
         >
           {{ countdownText }}
         </div>
-      </div>
-
-      <!-- 进度条 -->
-      <div class="w-full h-1 bg-gray-200/60 rounded-full overflow-hidden">
-        <div
-          class="h-full rounded-full transition-all duration-1000 ease-linear"
-          :style="{
-            width: progressPercent + '%',
-            backgroundColor: progressColor,
-          }"
-        />
       </div>
 
       <!-- 已专注时长（超时后显示） -->
