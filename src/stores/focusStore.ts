@@ -25,7 +25,10 @@ export const useFocusStore = defineStore('focus', () => {
   const isOvertime = computed(() => timer.status.value === 'overtime')
   const isCompleted = computed(() => status.value === 'completed')
   const isResting = computed(() => status.value === 'resting')
-  const todayMinutes = computed(() => todayStats.value?.totalMinutes ?? 0)
+  const todayMinutes = computed(() => {
+    const mins = todayStats.value?.totalMinutes ?? 0
+    return Math.round(mins * 100) / 100
+  })
   const todaySessionCount = computed(() => todayStats.value?.sessionCount ?? 0)
   const hasActiveTodo = computed(() => activeTodoId.value !== null)
 
