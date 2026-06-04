@@ -178,7 +178,7 @@ function onReminderParticlesDone() {
     <!-- 可拖拽标题栏 -->
     <div
       data-tauri-drag-region
-      class="flex items-center justify-between px-3 py-2 cursor-move shrink-0"
+      class="flex items-center justify-between px-3 py-2 cursor-default shrink-0"
     >
       <span class="text-xs text-gray-400 font-medium">{{ todoStore.todayCount }} 个待办</span>
     </div>
