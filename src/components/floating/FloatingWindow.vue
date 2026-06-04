@@ -9,6 +9,8 @@ import FocusButton from './FocusButton.vue'
 import FocusPanel from './FocusPanel.vue'
 import ReminderBanner from './ReminderBanner.vue'
 import NotesModal from './NotesModal.vue'
+import ParticleCanvas from './ParticleCanvas.vue'
+import { playFocusEndSound, playReminderSound } from '@/utils/sound'
 
 const todoStore = useTodoStore()
 const settingsStore = useSettingsStore()
@@ -18,9 +20,35 @@ const focusStore = useFocusStore()
 const showTodoNotes = ref(false)
 const pendingTodoId = ref<string | null>(null)
 
+// 粒子动画
+const showFocusEndParticles = ref(false)
+const showReminderParticles = ref(false)
+
 onMounted(async () => {
   await Promise.all([settingsStore.loadSettings(), todoStore.fetchTodayTodos()])
 })
+
+// 专注结束动画（倒计时归零 → 进入超时）
+watch(
+  () => focusStore.isOvertime,
+  (isOvertime, wasOvertime) => {
+    if (isOvertime && !wasOvertime) {
+      showFocusEndParticles.value = true
+      playFocusEndSound(settingsStore.notificationSound)
+    }
+  },
+)
+
+// 5 分钟提醒动画
+watch(
+  () => focusStore.showReminder,
+  (showing) => {
+    if (showing) {
+      showReminderParticles.value = true
+      playReminderSound(settingsStore.notificationSound)
+    }
+  },
+)
 
 // "我还在"提醒自动消失 → 异常结束
 watch(
@@ -82,10 +110,46 @@ function handleTodoNotesCancel() {
   showTodoNotes.value = false
   pendingTodoId.value = null
 }
+
+/** 专注结束粒子动画完成 */
+function onFocusEndParticlesDone() {
+  showFocusEndParticles.value = false
+}
+
+/** 提醒粒子动画完成 */
+function onReminderParticlesDone() {
+  showReminderParticles.value = false
+}
 </script>
 
 <template>
-  <div class="w-full h-full flex flex-col select-none overflow-hidden rounded-[16px]">
+  <div class="w-full h-full flex flex-col select-none overflow-hidden rounded-[16px] relative">
+    <!-- 专注结束粒子动画 -->
+    <ParticleCanvas
+      v-if="showFocusEndParticles"
+      :count="45"
+      :colors="['#6366f1', '#818cf8', '#22c55e', '#4f46e5', '#a78bfa']"
+      :min-radius="2"
+      :max-radius="6"
+      :duration="2800"
+      :speed="1.2"
+      :from-center="true"
+      @done="onFocusEndParticlesDone"
+    />
+
+    <!-- 提醒粒子动画（小型） -->
+    <ParticleCanvas
+      v-if="showReminderParticles"
+      :count="20"
+      :colors="['#f59e0b', '#fbbf24', '#fcd34d']"
+      :min-radius="1.5"
+      :max-radius="4"
+      :duration="1500"
+      :speed="0.6"
+      :from-center="false"
+      @done="onReminderParticlesDone"
+    />
+
     <!-- 可拖拽标题栏 -->
     <div
       data-tauri-drag-region

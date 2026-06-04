@@ -22,6 +22,7 @@ export interface CreateFocusSessionInput {
 
 /** 更新专注会话的输入 */
 export interface UpdateFocusSessionInput {
+  todoId?: string | null
   endTime?: string
   actualDuration?: number
   status?: FocusStatus

@@ -72,8 +72,6 @@ npm run tauri build
 📄 许可证
 本项目采用 MIT License。
 
-🤝 贡献
-欢迎提交 Issue 和 Pull Request。请确保代码符合项目编码规范（ESLint + Prettier + Rustfmt）。
 
 📧 联系
 作者：Yoza Xing

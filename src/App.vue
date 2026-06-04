@@ -1,13 +1,29 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import FloatingWindow from '@/components/floating/FloatingWindow.vue'
+import ManagementWindow from '@/components/management/ManagementWindow.vue'
 
-// YozaPomo 悬浮窗主应用
 const isDev = import.meta.env.DEV
 const isDevServerAlive = ref(true)
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null
 
+// 检测当前窗口
+const windowLabel = ref<string>('floating')
+
+function detectWindow() {
+  try {
+    const current = getCurrentWindow()
+    windowLabel.value = current.label
+  } catch {
+    // 非 Tauri 环境（纯浏览器开发），默认显示悬浮窗
+    windowLabel.value = 'floating'
+  }
+}
+
 onMounted(() => {
+  detectWindow()
+
   if (isDev) {
     heartbeatTimer = setInterval(async () => {
       try {
@@ -32,15 +48,18 @@ onUnmounted(() => {
     class="w-[280px] h-[360px] rounded-floating floating-shadow p-4"
     :style="{ background: 'rgba(255, 255, 255, 0.85)' }"
   >
-    <div class="text-center text-error text-sm mt-20">
+    <div class="text-center text-red-500 text-sm mt-20">
       开发服务器已断开
       <br />
       <span class="text-xs text-gray-400">请重启 pnpm tauri dev</span>
     </div>
   </div>
 
-  <!-- 正常：悬浮窗 -->
-  <FloatingWindow v-else />
+  <!-- 悬浮窗 -->
+  <FloatingWindow v-else-if="windowLabel === 'floating'" />
+
+  <!-- 管理界面 -->
+  <ManagementWindow v-else-if="windowLabel === 'management'" />
 </template>
 
 <style scoped>

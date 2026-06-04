@@ -56,6 +56,7 @@ pub struct CreateFocusSessionInput {
 /// 更新专注会话的输入
 #[derive(Debug, Deserialize)]
 pub struct UpdateFocusSessionInput {
+    pub todo_id: Option<Option<String>>,
     pub end_time: Option<String>,
     pub actual_duration: Option<i32>,
     pub status: Option<String>,

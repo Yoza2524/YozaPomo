@@ -177,10 +177,13 @@ pub fn update_focus_session(
     if let Some(notes) = input.notes {
         session.notes = notes;
     }
+    if let Some(todo_id) = input.todo_id {
+        session.todo_id = todo_id;
+    }
 
     conn.execute(
-        "UPDATE pomodoro_sessions SET end_time = ?1, actual_duration = ?2, status = ?3, notes = ?4 WHERE id = ?5",
-        rusqlite::params![session.end_time, session.actual_duration, session.status, session.notes, id],
+        "UPDATE pomodoro_sessions SET todo_id = ?1, end_time = ?2, actual_duration = ?3, status = ?4, notes = ?5 WHERE id = ?6",
+        rusqlite::params![session.todo_id, session.end_time, session.actual_duration, session.status, session.notes, id],
     )
     .map_err(|e| e.to_string())?;
 
