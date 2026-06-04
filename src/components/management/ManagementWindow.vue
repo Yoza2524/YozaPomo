@@ -49,7 +49,7 @@ onUnmounted(() => {
         <!-- 顶部 Tab 栏 -->
         <div class="bg-white border-b border-gray-200 px-4 shrink-0">
           <NTabs v-model:value="activeTab" type="line" animated>
-            <NTabPane name="today" tab="今日 TODO" />
+            <NTabPane name="today" tab="TODOs" />
             <NTabPane name="yesterday" tab="昨日未完成" />
             <NTabPane name="all" tab="TODO 列表" />
             <NTabPane name="history" tab="专注列表" />

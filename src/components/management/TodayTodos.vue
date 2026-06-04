@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { NButton, NInput, NSpace, NSpin, NEmpty, NPopconfirm, NTag, useMessage } from 'naive-ui'
+import { NButton, NInput, NModal, NSpace, NSpin, NEmpty, NPopconfirm, NTag, useMessage } from 'naive-ui'
 import { useTodoStore } from '@/stores/todoStore'
 import type { Todo } from '@/types/todo'
 import { formatTime } from '@/utils/format'
@@ -65,6 +65,11 @@ async function handleDelete(todo: Todo) {
 function handleDetail(todo: Todo) {
   detailTodo.value = todo
   showDetail.value = true
+}
+
+function handleDetailClose() {
+  showDetail.value = false
+  detailTodo.value = null
 }
 </script>
 
@@ -142,13 +147,13 @@ function handleDetail(todo: Todo) {
     </NSpin>
 
     <!-- 详情弹窗 -->
-    <n-modal v-model:show="showDetail" title="TODO 详情">
+    <NModal v-model:show="showDetail" title="TODO 详情">
       <TodoDetail
         v-if="detailTodo"
         :todo="detailTodo"
-        @close="showDetail = false"
+        @close="handleDetailClose"
         @refresh="todoStore.fetchTodayTodos()"
       />
-    </n-modal>
+    </NModal>
   </div>
 </template>
