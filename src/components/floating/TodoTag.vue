@@ -68,16 +68,6 @@ function handleEnd() {
       }">
         {{ todo.title }}
       </span>
-      <!-- 更多操作入口 -->
-      <span
-        class="text-xs shrink-0 cursor-pointer px-1 hover:text-gray-600"
-        :class="{
-          'text-gray-400': !isActive,
-          'text-green-500': isActive && !isPaused,
-          'text-amber-500': isPaused,
-        }"
-        @click.prevent.stop="handleContextMenu($event as unknown as MouseEvent)"
-      >···</span>
     </div>
 
     <!-- 右键菜单（通过 Teleport 渲染到 body） -->
