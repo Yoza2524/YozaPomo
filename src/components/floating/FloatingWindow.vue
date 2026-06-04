@@ -32,6 +32,7 @@ const showReminderParticles = ref(false)
 
 // 跨窗口事件同步
 let unlistenTodoChanged: UnlistenFn | null = null
+let unlistenSettingsChanged: UnlistenFn | null = null
 
 onMounted(async () => {
   await Promise.all([settingsStore.loadSettings(), todoStore.fetchTodayTodos()])
@@ -40,10 +41,16 @@ onMounted(async () => {
   unlistenTodoChanged = await listen('todo-changed', () => {
     todoStore.fetchTodayTodos()
   })
+
+  // 监听设置变更，重新加载设置
+  unlistenSettingsChanged = await listen('settings-changed', () => {
+    settingsStore.loadSettings()
+  })
 })
 
 onUnmounted(() => {
   if (unlistenTodoChanged) unlistenTodoChanged()
+  if (unlistenSettingsChanged) unlistenSettingsChanged()
 })
 
 // 专注结束动画（倒计时归零 → 进入超时）

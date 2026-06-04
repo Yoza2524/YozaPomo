@@ -11,6 +11,7 @@ import {
 } from 'naive-ui'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { playFocusEndSound } from '@/utils/sound'
+import { emit } from '@tauri-apps/api/event'
 
 const settingsStore = useSettingsStore()
 const message = useMessage()
@@ -45,6 +46,8 @@ async function handleSave() {
     await settingsStore.updateSetting('todoDisplayCount', todoDisplayCount.value)
     await settingsStore.updateSetting('showCountdown', showCountdown.value)
     await settingsStore.updateSetting('notificationSound', notificationSound.value)
+    // 通知悬浮窗刷新设置
+    await emit('settings-changed')
     message.success('设置已保存')
   } catch (e) {
     message.error(`保存失败: ${e}`)
@@ -70,7 +73,7 @@ function handleTestSound() {
           </div>
           <NInputNumber
             v-model:value="focusDuration"
-            :min="5"
+            :min="1"
             :max="120"
             :step="5"
             class="w-24"
