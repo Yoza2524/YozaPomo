@@ -8,22 +8,16 @@ const isDev = import.meta.env.DEV
 const isDevServerAlive = ref(true)
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null
 
-// 检测当前窗口
-const windowLabel = ref<string>('floating')
-
-function detectWindow() {
-  try {
-    const current = getCurrentWindow()
-    windowLabel.value = current.label
-  } catch {
-    // 非 Tauri 环境（纯浏览器开发），默认显示悬浮窗
-    windowLabel.value = 'floating'
-  }
+// 同步检测当前窗口（必须在 setup 阶段完成，避免 FloatingWindow 的 useAutoResize 在管理窗口中误执行）
+let detectedLabel = 'floating'
+try {
+  detectedLabel = getCurrentWindow().label
+} catch {
+  // 非 Tauri 环境，默认显示悬浮窗
 }
+const windowLabel = ref<string>(detectedLabel)
 
 onMounted(() => {
-  detectWindow()
-
   if (isDev) {
     heartbeatTimer = setInterval(async () => {
       try {

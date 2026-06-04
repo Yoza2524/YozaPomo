@@ -26,7 +26,7 @@ fn setup_windows(app: &mut tauri::App) {
                 height: 360,
             });
             let x = monitor_size.width.saturating_sub(window_size.width).saturating_sub(16);
-            let y = 16u32;
+            let y = 40u32; // 距离顶端 40px
             let _ = floating.set_position(PhysicalPosition::new(x as i32, y as i32));
         }
     }

@@ -12,15 +12,15 @@ import ReminderBanner from './ReminderBanner.vue'
 import NotesModal from './NotesModal.vue'
 import ParticleCanvas from './ParticleCanvas.vue'
 import { playFocusEndSound, playReminderSound } from '@/utils/sound'
-import { useClickThrough } from '@/composables/useClickThrough'
+import { useAutoResize } from '@/composables/useAutoResize'
 
 const todoStore = useTodoStore()
 const settingsStore = useSettingsStore()
 const focusStore = useFocusStore()
 
-// 透明区域点击穿透
+// 窗口大小自适应内容
 const contentRef = ref<HTMLElement | null>(null)
-useClickThrough(contentRef)
+useAutoResize(contentRef)
 
 // 笔记弹窗状态
 const showTodoNotes = ref(false)
@@ -148,7 +148,7 @@ function onReminderParticlesDone() {
 </script>
 
 <template>
-  <div ref="contentRef" class="floating-root w-full h-full flex flex-col select-none overflow-hidden rounded-[16px] relative">
+  <div ref="contentRef" class="floating-root w-full h-full flex flex-col select-none overflow-hidden rounded-[16px] relative" @contextmenu.prevent>
     <!-- 专注结束粒子动画 -->
     <ParticleCanvas
       v-if="showFocusEndParticles"
@@ -178,9 +178,8 @@ function onReminderParticlesDone() {
     <!-- 可拖拽标题栏 -->
     <div
       data-tauri-drag-region
-      class="flex items-center justify-between px-3 py-2 cursor-default shrink-0"
+      class="flex items-center justify-between px-3 py-4 cursor-default shrink-0"
     >
-      <span class="text-xs text-gray-400 font-medium">{{ todoStore.todayCount }} 个待办</span>
     </div>
 
     <!-- "我还在"提醒 -->
