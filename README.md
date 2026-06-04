@@ -4,6 +4,9 @@
 
 ![Tauri](https://img.shields.io/badge/Tauri-v2-blue) ![Vue 3](https://img.shields.io/badge/Vue-3-green) ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue) ![SQLite](https://img.shields.io/badge/SQLite-3-blue)
 
+## 🤫当前状态
+~~全是bug~~ >> 偶尔能用
+
 ## ✨ 特性
 
 - **悬浮窗**：透明圆角，置顶显示于屏幕右上角，支持 TODO 快捷管理和番茄钟控制。
@@ -14,7 +17,7 @@
   - 任务完成后弹出备注窗口（Markdown 支持）。
 - **番茄钟专注**：
   - 默认专注时长可设置。
-  - 每 5 分钟提醒并显示“我还在”按钮，未响应则强制结束并记录异常专注。
+  - 每 5 分钟提醒并显示“还在吗”按钮，监听电脑输入，未响应则强制结束并记录异常专注。
   - 倒计时结束后可进入休息模式，展示超时和超限时间。
   - 专注结束后支持备注记录。
 - **管理界面**：
