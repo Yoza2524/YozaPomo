@@ -22,9 +22,9 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
       const win = getCurrentWebviewWindow()
       const rect = el.getBoundingClientRect()
 
-      // 获取内容的实际高度（包括 padding）
+      // 获取内容的实际尺寸（包括 padding）
       const contentHeight = Math.ceil(rect.height)
-      const contentWidth = Math.ceil(rect.width)
+      const contentWidth = Math.max(Math.ceil(rect.width), 280)
 
       // 设置最小高度，避免窗口太小
       const minHeight = 120

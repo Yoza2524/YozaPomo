@@ -108,6 +108,11 @@ function handleTodoResume() {
   focusStore.resumeFocus()
 }
 
+/** 双击已激活 TODO → 结束专注 */
+async function handleEndFocus() {
+  await focusStore.completeFocus()
+}
+
 /** 结束 TODO → 弹出备注窗口 */
 function handleTodoEnd(todo: Todo) {
   pendingTodoId.value = todo.id
@@ -196,6 +201,7 @@ function onReminderParticlesDone() {
         @start="handleTodoStart"
         @pause="handleTodoPause"
         @resume="handleTodoResume"
+        @end-focus="handleEndFocus"
         @end="handleTodoEnd"
       />
     </div>

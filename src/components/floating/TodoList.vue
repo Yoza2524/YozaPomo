@@ -14,6 +14,7 @@ const emit = defineEmits<{
   start: [todo: Todo]
   pause: []
   resume: []
+  endFocus: []
   end: [todo: Todo]
 }>()
 
@@ -50,6 +51,7 @@ const hiddenCount = computed(() => Math.max(0, props.todos.length - props.maxDis
         @start="emit('start', $event)"
         @pause="emit('pause')"
         @resume="emit('resume')"
+        @end-focus="emit('endFocus')"
         @end="emit('end', $event)"
       />
 

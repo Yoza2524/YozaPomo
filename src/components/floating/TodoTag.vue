@@ -15,6 +15,7 @@ const emit = defineEmits<{
   start: [todo: Todo]
   pause: []
   resume: []
+  endFocus: []
   end: [todo: Todo]
 }>()
 
@@ -30,15 +31,12 @@ const tagClass = computed(() => {
 
 function handleDoubleClick() {
   if (props.isOtherActive) return // 其他 TODO 在专注中
-  if (props.isActive && !props.isPaused) {
-    // 双击已激活 TODO → 暂停
-    emit('pause')
-  } else if (props.isPaused) {
-    // 暂停中 → 恢复
-    emit('resume')
-  } else if (!props.isActive) {
+  if (!props.isActive) {
     // 未激活 → 开始专注
     emit('start', props.todo)
+  } else {
+    // 已激活（专注中或暂停）→ 结束专注
+    emit('endFocus')
   }
 }
 
@@ -56,7 +54,7 @@ function handleEnd() {
 
 <template>
   <div
-    :class="[tagClass, 'todo-tag rounded-xl px-3 py-2 mb-2 transition-all duration-300 select-none']"
+    :class="[tagClass, 'todo-tag rounded-xl px-3 py-2 mb-2 transition-all duration-300 select-none overflow-hidden']"
     @dblclick="handleDoubleClick"
     @contextmenu="handleContextMenu"
   >
@@ -92,7 +90,7 @@ function handleEnd() {
 /* 默认状态 */
 .todo-default {
   background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(229, 231, 235, 0.5);
+  border: 2px solid rgba(229, 231, 235, 0.5);
 }
 .todo-default:hover {
   background: rgba(255, 255, 255, 0.9);
