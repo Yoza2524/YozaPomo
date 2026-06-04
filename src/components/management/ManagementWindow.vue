@@ -45,7 +45,7 @@ onUnmounted(() => {
 <template>
   <NConfigProvider :locale="zhCN" :date-locale="dateZhCN">
     <NMessageProvider>
-      <div class="h-screen flex flex-col bg-gray-50">
+      <div class="h-screen flex flex-col bg-gray-50" @contextmenu.prevent>
         <!-- 顶部 Tab 栏 -->
         <div class="bg-white border-b border-gray-200 px-4 shrink-0">
           <NTabs v-model:value="activeTab" type="line" animated>
