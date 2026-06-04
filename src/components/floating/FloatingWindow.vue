@@ -12,10 +12,15 @@ import ReminderBanner from './ReminderBanner.vue'
 import NotesModal from './NotesModal.vue'
 import ParticleCanvas from './ParticleCanvas.vue'
 import { playFocusEndSound, playReminderSound } from '@/utils/sound'
+import { useClickThrough } from '@/composables/useClickThrough'
 
 const todoStore = useTodoStore()
 const settingsStore = useSettingsStore()
 const focusStore = useFocusStore()
+
+// 透明区域点击穿透
+const contentRef = ref<HTMLElement | null>(null)
+useClickThrough(contentRef)
 
 // 笔记弹窗状态
 const showTodoNotes = ref(false)
@@ -136,7 +141,7 @@ function onReminderParticlesDone() {
 </script>
 
 <template>
-  <div class="w-full h-full flex flex-col select-none overflow-hidden rounded-[16px] relative">
+  <div ref="contentRef" class="floating-root w-full h-full flex flex-col select-none overflow-hidden rounded-[16px] relative">
     <!-- 专注结束粒子动画 -->
     <ParticleCanvas
       v-if="showFocusEndParticles"
@@ -208,4 +213,11 @@ function onReminderParticlesDone() {
 </template>
 
 <style scoped>
+/* 透明区域点击穿透：根容器不接收鼠标事件，内容区域接收 */
+.floating-root {
+  pointer-events: none;
+}
+.floating-root > * {
+  pointer-events: auto;
+}
 </style>
