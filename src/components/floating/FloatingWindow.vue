@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { onMounted, watch, ref } from 'vue'
+import { onMounted, onUnmounted, watch, ref } from 'vue'
 import type { Todo } from '@/types/todo'
+import type { UnlistenFn } from '@tauri-apps/api/event'
+import { listen } from '@tauri-apps/api/event'
 import { useTodoStore } from '@/stores/todoStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useFocusStore } from '@/stores/focusStore'
 import TodoList from './TodoList.vue'
 import FocusButton from './FocusButton.vue'
-import FocusPanel from './FocusPanel.vue'
 import ReminderBanner from './ReminderBanner.vue'
 import NotesModal from './NotesModal.vue'
 import ParticleCanvas from './ParticleCanvas.vue'
@@ -24,8 +25,20 @@ const pendingTodoId = ref<string | null>(null)
 const showFocusEndParticles = ref(false)
 const showReminderParticles = ref(false)
 
+// 跨窗口事件同步
+let unlistenTodoChanged: UnlistenFn | null = null
+
 onMounted(async () => {
   await Promise.all([settingsStore.loadSettings(), todoStore.fetchTodayTodos()])
+
+  // 监听管理界面的 TODO 变更，同步刷新悬浮窗
+  unlistenTodoChanged = await listen('todo-changed', () => {
+    todoStore.fetchTodayTodos()
+  })
+})
+
+onUnmounted(() => {
+  if (unlistenTodoChanged) unlistenTodoChanged()
 })
 
 // 专注结束动画（倒计时归零 → 进入超时）
@@ -158,16 +171,13 @@ function onReminderParticlesDone() {
       <span class="text-xs text-gray-400 font-medium">{{ todoStore.todayCount }} 个待办</span>
     </div>
 
-    <!-- 倒计时面板 -->
-    <FocusPanel />
-
     <!-- "我还在"提醒 -->
     <div v-if="focusStore.showReminder" class="px-3">
       <ReminderBanner />
     </div>
 
-    <!-- TODO 标签列表 -->
-    <div v-if="!focusStore.isTimerActive" class="flex-1 px-3 overflow-hidden">
+    <!-- TODO 标签列表（始终可见） -->
+    <div class="flex-1 px-3 overflow-hidden">
       <TodoList
         :todos="todoStore.todayTodos"
         :max-display="settingsStore.todoDisplayCount"
@@ -179,14 +189,9 @@ function onReminderParticlesDone() {
       />
     </div>
 
-    <!-- 专注中提示 -->
-    <div v-else class="flex-1 px-3 overflow-hidden flex items-center justify-center">
-      <span class="text-xs text-gray-400">专注中，保持专注 💪</span>
-    </div>
-
     <!-- 底部操作区 -->
     <div class="px-4 pb-4 pt-2 shrink-0">
-      <FocusButton :disabled="todoStore.todayTodos.length === 0" />
+      <FocusButton :disabled="false" />
     </div>
 
     <!-- TODO 备注弹窗 -->

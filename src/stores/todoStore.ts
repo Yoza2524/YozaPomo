@@ -18,13 +18,14 @@ export const useTodoStore = defineStore('todo', () => {
 
   // --- Actions ---
 
-  /** 加载今日 TODO */
+  /** 加载今日 TODO（仅未完成） */
   async function fetchTodayTodos() {
     loading.value = true
     error.value = null
     try {
       const today = getTodayDate()
-      todayTodos.value = await db.getTodos(today)
+      const todos = await db.getTodos(today)
+      todayTodos.value = todos.filter((t: Todo) => t.completed === 0)
     } catch (e) {
       error.value = `加载今日 TODO 失败: ${e}`
     } finally {

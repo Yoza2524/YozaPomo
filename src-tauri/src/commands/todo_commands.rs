@@ -1,6 +1,6 @@
 use crate::db::schema::{CreateTodoInput, Todo, UpdateTodoInput};
 use crate::db::Database;
-use tauri::State;
+use tauri::{Emitter, State};
 use uuid::Uuid;
 
 /// 获取当前时间的本地时间字符串
@@ -10,7 +10,7 @@ fn now_local() -> String {
 
 /// 创建 TODO
 #[tauri::command]
-pub fn create_todo(db: State<Database>, input: CreateTodoInput) -> Result<Todo, String> {
+pub fn create_todo(app: tauri::AppHandle, db: State<Database>, input: CreateTodoInput) -> Result<Todo, String> {
     let conn = db.conn()?;
     let id = Uuid::new_v4().to_string();
     let now = now_local();
@@ -20,6 +20,8 @@ pub fn create_todo(db: State<Database>, input: CreateTodoInput) -> Result<Todo, 
         rusqlite::params![id, input.title, input.date, input.notes, now, now],
     )
     .map_err(|e| e.to_string())?;
+
+    let _ = app.emit("todo-changed", ());
 
     Ok(Todo {
         id,
@@ -114,7 +116,7 @@ pub fn get_todo(db: State<Database>, id: String) -> Result<Todo, String> {
 
 /// 更新 TODO
 #[tauri::command]
-pub fn update_todo(db: State<Database>, id: String, input: UpdateTodoInput) -> Result<Todo, String> {
+pub fn update_todo(app: tauri::AppHandle, db: State<Database>, id: String, input: UpdateTodoInput) -> Result<Todo, String> {
     let conn = db.conn()?;
 
     // 先获取现有 TODO
@@ -162,14 +164,17 @@ pub fn update_todo(db: State<Database>, id: String, input: UpdateTodoInput) -> R
     )
     .map_err(|e| e.to_string())?;
 
+    let _ = app.emit("todo-changed", ());
+
     Ok(todo)
 }
 
 /// 删除 TODO
 #[tauri::command]
-pub fn delete_todo(db: State<Database>, id: String) -> Result<(), String> {
+pub fn delete_todo(app: tauri::AppHandle, db: State<Database>, id: String) -> Result<(), String> {
     let conn = db.conn()?;
     conn.execute("DELETE FROM todos WHERE id = ?1", rusqlite::params![id])
         .map_err(|e| e.to_string())?;
+    let _ = app.emit("todo-changed", ());
     Ok(())
 }
