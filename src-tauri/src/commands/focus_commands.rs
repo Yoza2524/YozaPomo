@@ -201,3 +201,16 @@ pub fn delete_focus_session(db: State<Database>, id: String) -> Result<(), Strin
     .map_err(|e| e.to_string())?;
     Ok(())
 }
+
+/// 标记所有进行中的专注会话为异常（应用退出时调用）
+#[tauri::command]
+pub fn abort_active_focus_sessions(db: State<Database>) -> Result<u64, String> {
+    let conn = db.conn()?;
+    let now = now_local();
+    let affected = conn.execute(
+        "UPDATE pomodoro_sessions SET status = 'abnormal', end_time = ?1 WHERE status IN ('focusing', 'paused')",
+        rusqlite::params![now],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(affected as u64)
+}

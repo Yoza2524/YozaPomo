@@ -44,4 +44,16 @@ impl Database {
             .map_err(|e| e.to_string())?;
         Ok(())
     }
+
+    /// 标记所有进行中的专注会话为异常（应用退出时调用）
+    pub fn abort_active_focus_sessions(&self) -> DbResult<u64> {
+        let conn = self.conn()?;
+        let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let affected = conn.execute(
+            "UPDATE pomodoro_sessions SET status = 'abnormal', end_time = ?1 WHERE status IN ('focusing', 'paused')",
+            rusqlite::params![now],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(affected as u64)
+    }
 }

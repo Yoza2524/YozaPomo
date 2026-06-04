@@ -4,6 +4,7 @@ use tauri::{
     Emitter,
     Manager,
 };
+use crate::db::Database;
 
 pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let show_item = MenuItem::with_id(app, "show", "主页面", true, None::<&str>)?;
@@ -31,6 +32,10 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             "quit" => {
+                // 退出前标记所有进行中的专注为异常
+                if let Some(db) = app.try_state::<Database>() {
+                    let _ = db.abort_active_focus_sessions();
+                }
                 std::process::exit(0);
             }
             _ => {}

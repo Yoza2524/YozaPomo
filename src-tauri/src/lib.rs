@@ -65,6 +65,7 @@ pub fn run() {
             commands::focus_commands::get_recent_focus_sessions,
             commands::focus_commands::update_focus_session,
             commands::focus_commands::delete_focus_session,
+            commands::focus_commands::abort_active_focus_sessions,
             commands::settings_commands::get_all_settings,
             commands::settings_commands::get_setting,
             commands::settings_commands::set_setting,
