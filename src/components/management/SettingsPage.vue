@@ -21,6 +21,9 @@ const restDuration = ref(5)
 const todoDisplayCount = ref(3)
 const showCountdown = ref(true)
 const notificationSound = ref('default')
+const reminderInterval = ref(5)
+const overtimeReminderInterval = ref(3)
+const idleTimeout = ref(30)
 const saving = ref(false)
 
 const soundOptions = [
@@ -36,6 +39,9 @@ onMounted(async () => {
   todoDisplayCount.value = settingsStore.settings.todoDisplayCount
   showCountdown.value = settingsStore.settings.showCountdown
   notificationSound.value = settingsStore.settings.notificationSound
+  reminderInterval.value = settingsStore.settings.reminderInterval / 60
+  overtimeReminderInterval.value = settingsStore.settings.overtimeReminderInterval / 60
+  idleTimeout.value = settingsStore.settings.idleTimeout
 })
 
 async function handleSave() {
@@ -46,6 +52,9 @@ async function handleSave() {
     await settingsStore.updateSetting('todoDisplayCount', todoDisplayCount.value)
     await settingsStore.updateSetting('showCountdown', showCountdown.value)
     await settingsStore.updateSetting('notificationSound', notificationSound.value)
+    await settingsStore.updateSetting('reminderInterval', reminderInterval.value * 60)
+    await settingsStore.updateSetting('overtimeReminderInterval', overtimeReminderInterval.value * 60)
+    await settingsStore.updateSetting('idleTimeout', idleTimeout.value)
     // 通知悬浮窗刷新设置
     await emit('settings-changed')
     message.success('设置已保存')
@@ -134,6 +143,51 @@ function handleTestSound() {
             />
             <NButton size="tiny" @click="handleTestSound">试听</NButton>
           </NSpace>
+        </div>
+
+        <!-- 专注提醒间隔 -->
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm font-medium text-gray-700">专注提醒间隔</div>
+            <div class="text-xs text-gray-400">专注状态下每隔多久检测是否在岗（分钟）</div>
+          </div>
+          <NInputNumber
+            v-model:value="reminderInterval"
+            :min="1"
+            :max="30"
+            :step="1"
+            class="w-24"
+          />
+        </div>
+
+        <!-- 超时提醒间隔 -->
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm font-medium text-gray-700">超时提醒间隔</div>
+            <div class="text-xs text-gray-400">超时状态下每隔多久检测是否在岗（分钟）</div>
+          </div>
+          <NInputNumber
+            v-model:value="overtimeReminderInterval"
+            :min="1"
+            :max="15"
+            :step="1"
+            class="w-24"
+          />
+        </div>
+
+        <!-- 异常检测持续时长 -->
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm font-medium text-gray-700">异常检测持续时长</div>
+            <div class="text-xs text-gray-400">无操作多久后异常结束专注（秒）</div>
+          </div>
+          <NInputNumber
+            v-model:value="idleTimeout"
+            :min="3"
+            :max="90"
+            :step="1"
+            class="w-24"
+          />
         </div>
       </div>
 

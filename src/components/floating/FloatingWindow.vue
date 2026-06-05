@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch, ref } from 'vue'
+import { onMounted, onUnmounted, watch, ref, computed } from 'vue'
 import type { Todo } from '@/types/todo'
 import type { UnlistenFn } from '@tauri-apps/api/event'
 import { listen } from '@tauri-apps/api/event'
@@ -18,6 +18,7 @@ import { logWithSource } from '@/utils/logger'
 const todoStore = useTodoStore()
 const settingsStore = useSettingsStore()
 const focusStore = useFocusStore()
+const isOvertime = computed(() => focusStore.isOvertime)
 
 logWithSource('info', 'FloatingWindow[floating]', '悬浮窗组件初始化')
 
@@ -66,23 +67,20 @@ onUnmounted(() => {
 
 // 专注结束动画（倒计时归零 → 进入超时）
 watch(
-  () => focusStore.isOvertime,
-  (isOvertime, wasOvertime) => {
-    if (isOvertime && !wasOvertime) {
+  isOvertime,
+  (now, was) => {
+    if (now && !was) {
       emitTo('overlay', 'show-particle-focus-end')
       playFocusEndSound(settingsStore.notificationSound)
     }
   },
 )
 
-// 5 分钟提醒动画 + "还在吗？"文字 + 输入检测
+// 提醒触发 → 开始输入检测（2 秒宽限期后才显示按钮）
 watch(
   () => focusStore.showReminder,
   (showing) => {
     if (showing) {
-      emitTo('overlay', 'show-particle-reminder')
-      emitTo('overlay', 'show-reminder-text')
-      playReminderSound(settingsStore.notificationSound)
       startReminderInputDetection()
     } else {
       emitTo('overlay', 'hide-reminder-text')
@@ -91,14 +89,14 @@ watch(
   },
 )
 
-
-const REMINDER_TIMEOUT_MS = 30000 // 30 秒无操作则异常结束
+const REMINDER_GRACE_MS = 2000 // 2 秒宽限期
 
 let inputCheckTimer: ReturnType<typeof setInterval> | null = null
 
 function startReminderInputDetection() {
   const startTime = Date.now()
   let lastInputTick = 0
+  let gracePassed = false
 
   inputCheckTimer = setInterval(async () => {
     if (!focusStore.showReminder) return
@@ -108,14 +106,31 @@ function startReminderInputDetection() {
         lastInputTick = tick
         return
       }
-      // tick 变了 → 有输入（鼠标或键盘），继续专注
+      // tick 变了 → 有输入（鼠标或键盘）
       if (tick !== lastInputTick) {
+        // 宽限期内有输入 → 静默消除提醒
+        // 宽限期后有输入 → 隐藏按钮 + 消除提醒
+        if (gracePassed) {
+          emitTo('overlay', 'hide-reminder-text')
+        }
         focusStore.dismissReminder()
-        emitTo('overlay', 'hide-reminder-text')
         return
       }
-      // 没有输入 → 检查是否超时
-      if (Date.now() - startTime >= REMINDER_TIMEOUT_MS) {
+      const elapsed = Date.now() - startTime
+
+      // 2 秒宽限期到了，还没有输入 → 显示"还在吗？"
+      if (!gracePassed && elapsed >= REMINDER_GRACE_MS) {
+        gracePassed = true
+        emitTo('overlay', 'show-reminder-text')
+        playReminderSound(settingsStore.notificationSound)
+        // 超时状态下的提醒带小烟花特效
+        if (isOvertime.value) {
+          emitTo('overlay', 'show-particle-reminder')
+        }
+      }
+
+      // 超过异常检测时长 → 异常结束专注
+      if (elapsed >= settingsStore.idleTimeout * 1000) {
         focusStore.dismissReminder()
         focusStore.abortFocus()
         emitTo('overlay', 'hide-reminder-text')

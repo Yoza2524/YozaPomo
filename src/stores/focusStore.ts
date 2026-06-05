@@ -23,7 +23,7 @@ export const useFocusStore = defineStore('focus', () => {
   // --- Getters ---
   const isFocusing = computed(() => status.value === 'focusing')
   const isIdle = computed(() => status.value === 'idle')
-  const isOvertime = computed(() => timer.status.value === 'overtime')
+  const isOvertime = timer.isOvertime
   const isCompleted = computed(() => status.value === 'completed')
   const isResting = computed(() => status.value === 'resting')
   const todayMinutes = computed(() => {
@@ -61,7 +61,11 @@ export const useFocusStore = defineStore('focus', () => {
       currentSession.value = session
       activeTodoId.value = todoId
       status.value = 'focusing'
-      timer.start(plannedDuration)
+      timer.start(
+        plannedDuration,
+        settingsStore.reminderInterval,
+        settingsStore.overtimeReminderInterval,
+      )
       return session
     } catch (e) {
       error.value = `开始专注失败: ${e}`
@@ -124,7 +128,7 @@ export const useFocusStore = defineStore('focus', () => {
     status.value = 'resting'
     // 从设置中读取休息时长
     const restDuration = settingsStore.restDuration
-    timer.start(restDuration)
+    timer.start(restDuration, 0, 0)
   }
 
   /** 结束休息 */
@@ -165,7 +169,6 @@ export const useFocusStore = defineStore('focus', () => {
     plannedDuration: timer.plannedDuration,
     timerStatus: timer.status,
     showReminder: timer.showReminder,
-    reminderDismissed: timer.reminderDismissed,
     dismissReminder: timer.dismissReminder,
     // Focus state
     status,

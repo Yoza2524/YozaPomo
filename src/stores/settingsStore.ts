@@ -16,6 +16,9 @@ export const useSettingsStore = defineStore('settings', () => {
   const showCountdown = computed(() => settings.value.showCountdown)
   const notificationSound = computed(() => settings.value.notificationSound)
   const restDuration = computed(() => settings.value.restDuration)
+  const reminderInterval = computed(() => settings.value.reminderInterval)
+  const overtimeReminderInterval = computed(() => settings.value.overtimeReminderInterval)
+  const idleTimeout = computed(() => settings.value.idleTimeout)
 
   // --- Actions ---
 
@@ -35,6 +38,18 @@ export const useSettingsStore = defineStore('settings', () => {
         showCountdown: (map.show_countdown ?? String(DEFAULT_SETTINGS.showCountdown)) === 'true',
         notificationSound: map.notification_sound ?? DEFAULT_SETTINGS.notificationSound,
         restDuration: parseInt(map.rest_duration ?? String(DEFAULT_SETTINGS.restDuration), 10),
+        reminderInterval: parseInt(
+          map.reminder_interval ?? String(DEFAULT_SETTINGS.reminderInterval),
+          10,
+        ),
+        overtimeReminderInterval: parseInt(
+          map.overtime_reminder_interval ?? String(DEFAULT_SETTINGS.overtimeReminderInterval),
+          10,
+        ),
+        idleTimeout: parseInt(
+          map.idle_timeout ?? String(DEFAULT_SETTINGS.idleTimeout),
+          10,
+        ),
       }
     } catch (e) {
       error.value = `加载设置失败: ${e}`
@@ -70,6 +85,9 @@ export const useSettingsStore = defineStore('settings', () => {
     showCountdown,
     notificationSound,
     restDuration,
+    reminderInterval,
+    overtimeReminderInterval,
+    idleTimeout,
     loadSettings,
     updateSetting,
   }
