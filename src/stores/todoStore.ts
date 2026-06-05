@@ -19,7 +19,7 @@ export const useTodoStore = defineStore('todo', () => {
   // --- Actions ---
 
   /** 加载今日 TODO（仅未完成） */
-  async function fetchTodayTodos() {
+  async function fetchTodayTodos(retryCount = 0) {
     loading.value = true
     error.value = null
     try {
@@ -27,6 +27,11 @@ export const useTodoStore = defineStore('todo', () => {
       const todos = await db.getTodos(today)
       todayTodos.value = todos.filter((t: Todo) => t.completed === 0)
     } catch (e) {
+      // 首次失败时重试一次（可能是数据库连接未就绪）
+      if (retryCount < 1) {
+        setTimeout(() => fetchTodayTodos(retryCount + 1), 500)
+        return
+      }
       error.value = `加载今日 TODO 失败: ${e}`
     } finally {
       loading.value = false
