@@ -115,7 +115,8 @@ function handleWheel(
           <NSpace size="small" align="center">
             <div @wheel="focusMin = handleWheel($event, focusMin, { min: 0, max: 120, step: 1 })">
               <NInputNumber
-                v-model:value="focusMin"
+                :value="focusMin"
+                @update:value="focusMin = $event ?? focusMin"
                 :min="0"
                 :max="120"
                 :step="1"
@@ -127,7 +128,8 @@ function handleWheel(
             <span class="text-xs text-gray-400">分</span>
             <div @wheel="focusSec = handleWheel($event, focusSec, { min: 0, max: 59, step: 5 })">
               <NInputNumber
-                v-model:value="focusSec"
+                :value="focusSec"
+                @update:value="focusSec = $event ?? focusSec"
                 :min="0"
                 :max="59"
                 :step="5"
@@ -149,7 +151,8 @@ function handleWheel(
           <NSpace size="small" align="center">
             <div @wheel="restMin = handleWheel($event, restMin, { min: 0, max: 30, step: 1 })">
               <NInputNumber
-                v-model:value="restMin"
+                :value="restMin"
+                @update:value="restMin = $event ?? restMin"
                 :min="0"
                 :max="30"
                 :step="1"
@@ -161,7 +164,8 @@ function handleWheel(
             <span class="text-xs text-gray-400">分</span>
             <div @wheel="restSec = handleWheel($event, restSec, { min: 0, max: 59, step: 5 })">
               <NInputNumber
-                v-model:value="restSec"
+                :value="restSec"
+                @update:value="restSec = $event ?? restSec"
                 :min="0"
                 :max="59"
                 :step="5"
@@ -182,7 +186,8 @@ function handleWheel(
           </div>
           <div @wheel="todoDisplayCount = handleWheel($event, todoDisplayCount, { min: 1, max: 10, step: 1 })">
             <NInputNumber
-              v-model:value="todoDisplayCount"
+              :value="todoDisplayCount"
+              @update:value="todoDisplayCount = $event ?? todoDisplayCount"
               :min="1"
               :max="10"
               :step="1"
@@ -226,7 +231,8 @@ function handleWheel(
           </div>
           <div @wheel="reminderInterval = handleWheel($event, reminderInterval, { min: 1, max: 30, step: 1 })">
             <NInputNumber
-              v-model:value="reminderInterval"
+              :value="reminderInterval"
+              @update:value="reminderInterval = $event ?? reminderInterval"
               :min="1"
               :max="30"
               :step="1"
@@ -244,7 +250,8 @@ function handleWheel(
           </div>
           <div @wheel="overtimeReminderInterval = handleWheel($event, overtimeReminderInterval, { min: 1, max: 15, step: 1 })">
             <NInputNumber
-              v-model:value="overtimeReminderInterval"
+              :value="overtimeReminderInterval"
+              @update:value="overtimeReminderInterval = $event ?? overtimeReminderInterval"
               :min="1"
               :max="15"
               :step="1"
@@ -262,7 +269,8 @@ function handleWheel(
           </div>
           <div @wheel="idleTimeout = handleWheel($event, idleTimeout, { min: 3, max: 90, step: 5 })">
             <NInputNumber
-              v-model:value="idleTimeout"
+              :value="idleTimeout"
+              @update:value="idleTimeout = $event ?? idleTimeout"
               :min="3"
               :max="90"
               :step="5"
