@@ -23,7 +23,7 @@ const hiddenCount = computed(() => Math.max(0, props.todos.length - props.maxDis
 </script>
 
 <template>
-  <div class="todo-list h-full overflow-y-auto scrollbar-thin">
+  <div class="todo-list h-full overflow-hidden">
     <!-- 加载中 -->
     <div v-if="loading" class="flex items-center justify-center h-full">
       <span class="text-xs text-gray-400">加载中...</span>
@@ -51,8 +51,8 @@ const hiddenCount = computed(() => Math.max(0, props.todos.length - props.maxDis
       />
 
       <!-- 超出上限时显示省略号 -->
-      <div v-if="hiddenCount > 0" class="text-center py-1">
-        <span class="text-xs text-gray-400">还有 {{ hiddenCount }} 项...</span>
+      <div v-if="hiddenCount > 0" class="text-center" style="line-height: 1; margin-top: 1px;">
+        <span style="font-size: 10px; font-weight: bold; color: rgba(0, 0, 0, 0.25);">...</span>
       </div>
     </template>
   </div>
