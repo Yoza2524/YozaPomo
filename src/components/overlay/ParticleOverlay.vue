@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import ParticleCanvas from '@/components/floating/ParticleCanvas.vue'
@@ -15,15 +15,6 @@ let unlistenHideReminderText: UnlistenFn | null = null
 
 async function showWindow() {
   const win = getCurrentWebviewWindow()
-  await win.setSize(
-    new (await import('@tauri-apps/api/window')).LogicalSize(
-      window.screen.width,
-      window.screen.height,
-    ),
-  )
-  await win.setPosition(
-    new (await import('@tauri-apps/api/window')).LogicalPosition(0, 0),
-  )
   await win.show()
 }
 
@@ -43,19 +34,28 @@ function onReminderDone() {
 }
 
 onMounted(async () => {
+  // 初始化时设置窗口为全屏尺寸
+  const win = getCurrentWebviewWindow()
+  const { LogicalSize, LogicalPosition } = await import('@tauri-apps/api/window')
+  await win.setSize(new LogicalSize(window.screen.width, window.screen.height))
+  await win.setPosition(new LogicalPosition(0, 0))
+
   unlistenFocusEnd = await listen('show-particle-focus-end', async () => {
-    await showWindow()
     showFocusEnd.value = true
+    await nextTick()
+    await showWindow()
   })
 
   unlistenReminder = await listen('show-particle-reminder', async () => {
-    await showWindow()
     showReminder.value = true
+    await nextTick()
+    await showWindow()
   })
 
   unlistenReminderText = await listen('show-reminder-text', async () => {
-    await showWindow()
     showReminderText.value = true
+    await nextTick()
+    await showWindow()
   })
 
   unlistenHideReminderText = await listen('hide-reminder-text', () => {
@@ -73,7 +73,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="w-screen h-screen overflow-hidden pointer-events-none">
+  <div class="w-screen h-screen overflow-hidden pointer-events-none bg-transparent">
     <!-- 专注结束粒子动画 -->
     <div v-if="showFocusEnd" class="absolute inset-0">
       <ParticleCanvas
@@ -114,6 +114,18 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
+
+<style>
+/* 全局样式，确保窗口无边框 */
+html, body, #app {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  overflow: hidden !important;
+}
+</style>
 
 <style scoped>
 .reminder-text {
