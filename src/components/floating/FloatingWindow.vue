@@ -92,7 +92,7 @@ watch(
 )
 
 
-const REMINDER_TIMEOUT_MS = 3000 // 3 秒无操作则异常结束（临时；正式为 30000）
+const REMINDER_TIMEOUT_MS = 30000 // 30 秒无操作则异常结束
 
 let inputCheckTimer: ReturnType<typeof setInterval> | null = null
 
