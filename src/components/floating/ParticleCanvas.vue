@@ -55,8 +55,8 @@ interface Particle {
 let particles: Particle[] = []
 
 function createParticles(width: number, height: number) {
-  const originX = props.fromCenter ? width / 2 : width / 2
-  const originY = props.fromCenter ? height / 2 : height * 0.2
+  const originX = width / 2
+  const originY = height * 2 / 9
 
   particles = Array.from({ length: props.count! }, () => {
     const angle = Math.random() * Math.PI * 2
