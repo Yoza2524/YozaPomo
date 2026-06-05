@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import {
   NButton,
   NInputNumber,
@@ -33,6 +33,12 @@ const soundOptions = [
   { label: '钟声', value: 'bell' },
   { label: '柔和', value: 'soft' },
 ]
+
+// 分钟/秒数联动约束：分钟为0则秒至少5，秒为0则分钟至少1
+watch(focusMin, (v) => { if (v === 0 && focusSec.value < 5) focusSec.value = 5 })
+watch(focusSec, (v) => { if (v === 0 && focusMin.value < 1) focusMin.value = 1 })
+watch(restMin, (v) => { if (v === 0 && restSec.value < 5) restSec.value = 5 })
+watch(restSec, (v) => { if (v === 0 && restMin.value < 1) restMin.value = 1 })
 
 onMounted(async () => {
   await settingsStore.loadSettings()
