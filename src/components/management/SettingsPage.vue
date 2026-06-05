@@ -16,8 +16,10 @@ import { emit } from '@tauri-apps/api/event'
 const settingsStore = useSettingsStore()
 const message = useMessage()
 
-const focusDuration = ref(25)
-const restDuration = ref(5)
+const focusMin = ref(25)
+const focusSec = ref(0)
+const restMin = ref(5)
+const restSec = ref(0)
 const todoDisplayCount = ref(3)
 const showCountdown = ref(true)
 const notificationSound = ref('default')
@@ -34,8 +36,10 @@ const soundOptions = [
 
 onMounted(async () => {
   await settingsStore.loadSettings()
-  focusDuration.value = settingsStore.settings.focusDuration / 60
-  restDuration.value = settingsStore.settings.restDuration / 60
+  focusMin.value = Math.floor(settingsStore.settings.focusDuration / 60)
+  focusSec.value = settingsStore.settings.focusDuration % 60
+  restMin.value = Math.floor(settingsStore.settings.restDuration / 60)
+  restSec.value = settingsStore.settings.restDuration % 60
   todoDisplayCount.value = settingsStore.settings.todoDisplayCount
   showCountdown.value = settingsStore.settings.showCountdown
   notificationSound.value = settingsStore.settings.notificationSound
@@ -45,10 +49,20 @@ onMounted(async () => {
 })
 
 async function handleSave() {
+  const focusTotal = focusMin.value * 60 + focusSec.value
+  const restTotal = restMin.value * 60 + restSec.value
+  if (focusTotal < 5) {
+    message.warning('专注时长最低 5 秒')
+    return
+  }
+  if (restTotal < 5) {
+    message.warning('休息时长最低 5 秒')
+    return
+  }
   saving.value = true
   try {
-    await settingsStore.updateSetting('focusDuration', focusDuration.value * 60)
-    await settingsStore.updateSetting('restDuration', restDuration.value * 60)
+    await settingsStore.updateSetting('focusDuration', focusTotal)
+    await settingsStore.updateSetting('restDuration', restTotal)
     await settingsStore.updateSetting('todoDisplayCount', todoDisplayCount.value)
     await settingsStore.updateSetting('showCountdown', showCountdown.value)
     await settingsStore.updateSetting('notificationSound', notificationSound.value)
@@ -78,30 +92,56 @@ function handleTestSound() {
         <div class="flex items-center justify-between">
           <div>
             <div class="text-sm font-medium text-gray-700">默认专注时长</div>
-            <div class="text-xs text-gray-400">每次专注的默认时长（分钟）</div>
+            <div class="text-xs text-gray-400">每次专注的默认时长（最低 5 秒）</div>
           </div>
-          <NInputNumber
-            v-model:value="focusDuration"
-            :min="1"
-            :max="120"
-            :step="5"
-            class="w-24"
-          />
+          <NSpace size="small" align="center">
+            <NInputNumber
+              v-model:value="focusMin"
+              :min="0"
+              :max="120"
+              :step="1"
+              class="w-20"
+              placeholder="分"
+            />
+            <span class="text-xs text-gray-400">分</span>
+            <NInputNumber
+              v-model:value="focusSec"
+              :min="0"
+              :max="59"
+              :step="5"
+              class="w-20"
+              placeholder="秒"
+            />
+            <span class="text-xs text-gray-400">秒</span>
+          </NSpace>
         </div>
 
         <!-- 休息时长 -->
         <div class="flex items-center justify-between">
           <div>
             <div class="text-sm font-medium text-gray-700">休息时长</div>
-            <div class="text-xs text-gray-400">专注结束后的休息时间（分钟）</div>
+            <div class="text-xs text-gray-400">专注结束后的休息时间（最低 5 秒）</div>
           </div>
-          <NInputNumber
-            v-model:value="restDuration"
-            :min="1"
-            :max="30"
-            :step="1"
-            class="w-24"
-          />
+          <NSpace size="small" align="center">
+            <NInputNumber
+              v-model:value="restMin"
+              :min="0"
+              :max="30"
+              :step="1"
+              class="w-20"
+              placeholder="分"
+            />
+            <span class="text-xs text-gray-400">分</span>
+            <NInputNumber
+              v-model:value="restSec"
+              :min="0"
+              :max="59"
+              :step="5"
+              class="w-20"
+              placeholder="秒"
+            />
+            <span class="text-xs text-gray-400">秒</span>
+          </NSpace>
         </div>
 
         <!-- 显示 TODO 数量 -->
