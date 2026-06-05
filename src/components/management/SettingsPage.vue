@@ -218,11 +218,11 @@ function handleWheel(
           </NSpace>
         </div>
 
-        <!-- 专注提醒间隔 -->
+        <!-- 专注检测间隔 -->
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-sm font-medium text-gray-700">专注提醒间隔</div>
-            <div class="text-xs text-gray-400">专注状态下每隔多久检测是否在岗（分钟）</div>
+            <div class="text-sm font-medium text-gray-700">专注检测间隔</div>
+            <div class="text-xs text-gray-400">专注状态下每（分）检测</div>
           </div>
           <div @wheel="reminderInterval = handleWheel($event, reminderInterval, { min: 1, max: 30, step: 1 })">
             <NInputNumber
@@ -236,11 +236,11 @@ function handleWheel(
           </div>
         </div>
 
-        <!-- 超时提醒间隔 -->
+        <!-- 超时专注检测间隔 -->
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-sm font-medium text-gray-700">超时提醒间隔</div>
-            <div class="text-xs text-gray-400">超时状态下每隔多久检测是否在岗（分钟）</div>
+            <div class="text-sm font-medium text-gray-700">超时专注检测间隔</div>
+            <div class="text-xs text-gray-400">超时专注状态下每（分）检测</div>
           </div>
           <div @wheel="overtimeReminderInterval = handleWheel($event, overtimeReminderInterval, { min: 1, max: 15, step: 1 })">
             <NInputNumber
@@ -258,14 +258,14 @@ function handleWheel(
         <div class="flex items-center justify-between">
           <div>
             <div class="text-sm font-medium text-gray-700">异常检测持续时长</div>
-            <div class="text-xs text-gray-400">无操作多久后异常结束专注（秒）</div>
+            <div class="text-xs text-gray-400">检测无操作（秒）后异常终止</div>
           </div>
-          <div @wheel="idleTimeout = handleWheel($event, idleTimeout, { min: 3, max: 90, step: 1 })">
+          <div @wheel="idleTimeout = handleWheel($event, idleTimeout, { min: 3, max: 90, step: 5 })">
             <NInputNumber
               v-model:value="idleTimeout"
               :min="3"
               :max="90"
-              :step="1"
+              :step="5"
               :show-button="false"
               class="w-14"
             />
