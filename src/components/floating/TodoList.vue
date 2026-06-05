@@ -146,9 +146,10 @@ async function openManagement() {
   animation: ellipsisIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 省略号消失动画 - 向上滑出，不改变高度 */
+/* 省略号消失动画 - 缓慢收起高度 */
 .ellipsis-leave {
-  animation: ellipsisOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: ellipsisOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
 }
 
 @keyframes ellipsisIn {
@@ -165,11 +166,15 @@ async function openManagement() {
 @keyframes ellipsisOut {
   0% {
     opacity: 1;
-    transform: translateY(0);
+    height: 18px;
+    margin-top: 2px;
+    padding: 2px 0;
   }
   100% {
     opacity: 0;
-    transform: translateY(-8px);
+    height: 0;
+    margin-top: 0;
+    padding: 0;
   }
 }
 
