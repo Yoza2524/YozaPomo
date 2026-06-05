@@ -13,10 +13,13 @@ import { playFocusEndSound, playReminderSound } from '@/utils/sound'
 import { emitTo } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
 import { useAutoResize } from '@/composables/useAutoResize'
+import { logWithSource } from '@/utils/logger'
 
 const todoStore = useTodoStore()
 const settingsStore = useSettingsStore()
 const focusStore = useFocusStore()
+
+logWithSource('info', 'FloatingWindow[floating]', '悬浮窗组件初始化')
 
 // 窗口大小自适应内容
 const contentRef = ref<HTMLElement | null>(null)
@@ -31,18 +34,28 @@ let unlistenTodoChanged: UnlistenFn | null = null
 let unlistenSettingsChanged: UnlistenFn | null = null
 
 onMounted(async () => {
-  await Promise.all([settingsStore.loadSettings(), todoStore.fetchTodayTodos()])
+  logWithSource('info', 'FloatingWindow', '悬浮窗 onMounted 开始')
+
+  try {
+    await Promise.all([settingsStore.loadSettings(), todoStore.fetchTodayTodos()])
+    logWithSource('info', 'FloatingWindow', `加载完成: ${todoStore.todayTodos.length} 个 TODO`)
+  } catch (e) {
+    logWithSource('error', 'FloatingWindow', `加载数据失败: ${e}`)
+  }
 
   // 监听管理界面的 TODO 变更，同步刷新悬浮窗
   unlistenTodoChanged = await listen('todo-changed', () => {
+    logWithSource('info', 'FloatingWindow', '收到 todo-changed 事件，刷新列表')
     todoStore.fetchTodayTodos()
   })
 
   // 监听设置变更，重新加载设置
   unlistenSettingsChanged = await listen('settings-changed', () => {
+    logWithSource('info', 'FloatingWindow', '收到 settings-changed 事件，重新加载')
     settingsStore.loadSettings()
   })
 
+  logWithSource('info', 'FloatingWindow', '悬浮窗 onMounted 完成')
 })
 
 onUnmounted(() => {

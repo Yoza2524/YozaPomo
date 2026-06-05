@@ -1,6 +1,7 @@
 import { onMounted, onUnmounted, type Ref } from 'vue'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { LogicalSize, LogicalPosition } from '@tauri-apps/api/window'
+import { logWithSource } from '@/utils/logger'
 
 /**
  * 使悬浮窗大小适应内容
@@ -16,7 +17,10 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
 
   async function updateWindowSize() {
     const el = containerRef.value
-    if (!el) return
+    if (!el) {
+      logWithSource('warn', 'useAutoResize[floating]', '容器元素不存在，跳过调整')
+      return
+    }
 
     try {
       const win = getCurrentWebviewWindow()
@@ -26,6 +30,8 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
       const contentHeight = Math.ceil(rect.height)
       const contentWidth = Math.max(Math.ceil(rect.width), 280)
 
+      logWithSource('info', 'useAutoResize[floating]', `内容尺寸: ${contentWidth}x${contentHeight}`)
+
       // 设置最小高度，避免窗口太小
       const minHeight = 120
       const finalHeight = Math.max(contentHeight, minHeight)
@@ -34,20 +40,35 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
       const currentSize = await win.outerSize()
       const currentPos = await win.outerPosition()
 
+      logWithSource('info', 'useAutoResize[floating]', `当前窗口: 位置=(${currentPos.x}, ${currentPos.y}), 尺寸=${currentSize.width}x${currentSize.height}`)
+
+      // 获取屏幕尺寸（用于限制窗口位置）
+      const screenWidth = window.screen.width
+      const screenHeight = window.screen.height
+
       // 计算新位置：保持右上角对齐
       // 右上角坐标 = 当前位置.x + 当前宽度, 当前位置.y
       const rightTopX = currentPos.x + currentSize.width
       const rightTopY = currentPos.y
 
       // 新位置 = 右上角坐标 - 新宽度
-      const newX = rightTopX - contentWidth
-      const newY = rightTopY
+      let newX = rightTopX - contentWidth
+      let newY = rightTopY
+
+      // 限制窗口位置在屏幕范围内（留 10px 边距）
+      newX = Math.max(10, Math.min(newX, screenWidth - contentWidth - 10))
+      newY = Math.max(10, Math.min(newY, screenHeight - finalHeight - 10))
+
+      logWithSource('info', 'useAutoResize[floating]', `屏幕尺寸: ${screenWidth}x${screenHeight}`)
+      logWithSource('info', 'useAutoResize[floating]', `调整窗口: 新尺寸=${contentWidth}x${finalHeight}, 新位置=(${newX}, ${newY})`)
 
       // 调整窗口大小和位置
       await win.setSize(new LogicalSize(contentWidth, finalHeight))
       await win.setPosition(new LogicalPosition(newX, newY))
+
+      logWithSource('info', 'useAutoResize[floating]', '窗口调整完成')
     } catch (e) {
-      console.error('调整窗口大小失败:', e)
+      logWithSource('error', 'useAutoResize[floating]', `调整窗口大小失败: ${e}`)
     }
   }
 
@@ -58,7 +79,12 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
 
   onMounted(() => {
     const el = containerRef.value
-    if (!el) return
+    if (!el) {
+      logWithSource('warn', 'useAutoResize[floating]', 'onMounted: 容器元素不存在')
+      return
+    }
+
+    logWithSource('info', 'useAutoResize[floating]', '初始化自动调整大小')
 
     // 初始调整
     updateWindowSize()
@@ -69,6 +95,7 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
   })
 
   onUnmounted(() => {
+    logWithSource('info', 'useAutoResize[floating]', '清理自动调整大小')
     if (resizeObserver) {
       resizeObserver.disconnect()
       resizeObserver = null

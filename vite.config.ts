@@ -18,6 +18,22 @@ export default defineConfig(async () => ({
     },
   },
 
+  // 代码分割配置
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // 将大型依赖分割成单独的 chunk
+          "vue-vendor": ["vue", "pinia"],
+          "naive-ui": ["naive-ui"],
+          "tauri-api": ["@tauri-apps/api"],
+        },
+      },
+    },
+    // 提高 chunk 大小警告阈值（naive-ui 本身较大）
+    chunkSizeWarningLimit: 600,
+  },
+
   server: {
     port: 1420,
     strictPort: true,

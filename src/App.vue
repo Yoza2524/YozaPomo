@@ -4,6 +4,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import FloatingWindow from '@/components/floating/FloatingWindow.vue'
 import ManagementWindow from '@/components/management/ManagementWindow.vue'
 import ParticleOverlay from '@/components/overlay/ParticleOverlay.vue'
+import { logWithSource } from '@/utils/logger'
 
 const isDev = import.meta.env.DEV
 const isDevServerAlive = ref(true)
@@ -13,12 +14,17 @@ let heartbeatTimer: ReturnType<typeof setInterval> | null = null
 let detectedLabel = 'floating'
 try {
   detectedLabel = getCurrentWindow().label
+  // 使用带窗口标签的 source，方便区分日志来自哪个窗口
+  logWithSource('info', `App[${detectedLabel}]`, `检测到窗口标签: ${detectedLabel}`)
 } catch {
   // 非 Tauri 环境，默认显示悬浮窗
+  logWithSource('warn', 'App[unknown]', '无法检测窗口标签，默认使用 floating')
 }
 const windowLabel = ref<string>(detectedLabel)
 
 onMounted(() => {
+  logWithSource('info', `App[${windowLabel.value}]`, `App 已挂载，窗口类型: ${windowLabel.value}`)
+
   if (isDev) {
     heartbeatTimer = setInterval(async () => {
       try {
