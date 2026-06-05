@@ -40,7 +40,7 @@ pub fn create_todo(app: tauri::AppHandle, db: State<Database>, input: CreateTodo
 pub fn get_todos(db: State<Database>, date: String) -> Result<Vec<Todo>, String> {
     let conn = db.conn()?;
     let mut stmt = conn
-        .prepare("SELECT id, title, date, notes, completed, sort_order, created_at, updated_at FROM todos WHERE date = ?1 ORDER BY sort_order ASC, created_at DESC")
+        .prepare("SELECT id, title, date, notes, completed, sort_order, created_at, updated_at FROM todos WHERE date = ?1 ORDER BY sort_order ASC, created_at ASC")
         .map_err(|e| e.to_string())?;
 
     let todos = stmt
