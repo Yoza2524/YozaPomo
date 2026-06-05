@@ -8,6 +8,8 @@ const props = defineProps<{
   isActive: boolean
   /** 有另一个 TODO 在专注中 */
   isOtherActive: boolean
+  /** 是否是新创建的 TODO */
+  isNew?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -50,7 +52,7 @@ function handleEnd() {
 
 <template>
   <div
-    :class="[tagClass, 'todo-tag rounded-xl px-3 py-2 mb-2 transition-all duration-300 select-none overflow-hidden']"
+    :class="[tagClass, 'todo-tag rounded-xl px-3 py-2 mb-2 transition-all duration-300 select-none overflow-hidden', { 'todo-new': isNew }]"
     @dblclick="handleDoubleClick"
     @contextmenu="handleContextMenu"
   >
@@ -103,18 +105,26 @@ function handleEnd() {
   pointer-events: none;
 }
 
-.todo-tag {
-  animation: fadeInUp 0.3s ease-out;
+/* 新创建的 TODO 动画 - 向下展开，推动下方按钮和边框 */
+.todo-new {
+  animation: todoExpand 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-@keyframes fadeInUp {
-  from {
+@keyframes todoExpand {
+  0% {
     opacity: 0;
-    transform: translateY(8px);
+    height: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
   }
-  to {
+  100% {
     opacity: 1;
-    transform: translateY(0);
+    height: 40px;
+    margin-bottom: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
   }
 }
 

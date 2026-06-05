@@ -14,6 +14,41 @@ import { logWithSource } from '@/utils/logger'
 export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
   let resizeObserver: ResizeObserver | null = null
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
+  let animationFrame: number | null = null
+  let isAnimating = false
+
+  // 动画期间主动驱动 resize（fire-and-forget，不等待 API 返回）
+  // 只调整高度，不改变位置
+  function resizeImmediate() {
+    const el = containerRef.value
+    if (!el) return
+    const win = getCurrentWebviewWindow()
+    const rect = el.getBoundingClientRect()
+    const contentHeight = Math.ceil(rect.height)
+    const contentWidth = Math.max(Math.ceil(rect.width), 280)
+    const finalHeight = Math.max(contentHeight, 120)
+    // fire-and-forget，只改大小不改位置
+    win.setSize(new LogicalSize(contentWidth, finalHeight)).catch(() => {})
+  }
+
+  function onAnimStart() {
+    isAnimating = true
+    function frame() {
+      resizeImmediate()
+      if (isAnimating) animationFrame = requestAnimationFrame(frame)
+    }
+    if (animationFrame) cancelAnimationFrame(animationFrame)
+    animationFrame = requestAnimationFrame(frame)
+  }
+
+  function onAnimEnd() {
+    isAnimating = false
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame)
+      animationFrame = null
+    }
+    updateWindowSize()
+  }
 
   async function updateWindowSize() {
     const el = containerRef.value
@@ -72,9 +107,10 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
     }
   }
 
+  // ResizeObserver 触发时只调整大小，不改位置，避免闪跳
   function debounceUpdate() {
     if (debounceTimer) clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(updateWindowSize, 100)
+    debounceTimer = setTimeout(resizeImmediate, 16)
   }
 
   onMounted(() => {
@@ -92,10 +128,19 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
     // 监测内容大小变化
     resizeObserver = new ResizeObserver(debounceUpdate)
     resizeObserver.observe(el)
+
+    // 监听动画，动画期间主动驱动 resize
+    el.addEventListener('animationstart', onAnimStart)
+    el.addEventListener('animationend', onAnimEnd)
   })
 
   onUnmounted(() => {
     logWithSource('info', 'useAutoResize[floating]', '清理自动调整大小')
+    const el = containerRef.value
+    if (el) {
+      el.removeEventListener('animationstart', onAnimStart)
+      el.removeEventListener('animationend', onAnimEnd)
+    }
     if (resizeObserver) {
       resizeObserver.disconnect()
       resizeObserver = null
@@ -104,5 +149,12 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
       clearTimeout(debounceTimer)
       debounceTimer = null
     }
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame)
+      animationFrame = null
+    }
   })
+
+  // 暴露立即调整方法，供 pin 状态变化时调用
+  return { immediateResize: updateWindowSize }
 }

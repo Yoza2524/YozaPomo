@@ -39,6 +39,9 @@ export function useSettings() {
           map.idle_timeout ?? String(DEFAULT_SETTINGS.idleTimeout),
           10,
         ),
+        floatingX: map.floating_x ? parseInt(map.floating_x, 10) : DEFAULT_SETTINGS.floatingX,
+        floatingY: map.floating_y ? parseInt(map.floating_y, 10) : DEFAULT_SETTINGS.floatingY,
+        floatingPinned: (map.floating_pinned ?? String(DEFAULT_SETTINGS.floatingPinned)) === 'true',
       }
     } catch (e) {
       error.value = `加载设置失败: ${e}`

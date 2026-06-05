@@ -11,6 +11,7 @@ export const useTodoStore = defineStore('todo', () => {
   const allTodos = ref<Todo[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const newTodoId = ref<string | null>(null)
 
   // --- Getters ---
   const todayCount = computed(() => todayTodos.value.length)
@@ -74,6 +75,9 @@ export const useTodoStore = defineStore('todo', () => {
       const todo = await db.createTodo(title, today, notes ?? '') as Todo
       if (todo.date === today) {
         todayTodos.value.push(todo)
+        // 标记新创建的 TODO，用于动画
+        newTodoId.value = todo.id
+        setTimeout(() => { newTodoId.value = null }, 500)
       }
       return todo
     } catch (e) {
@@ -123,6 +127,7 @@ export const useTodoStore = defineStore('todo', () => {
     allTodos,
     loading,
     error,
+    newTodoId,
     todayCount,
     hasIncompleteFromYesterday,
     fetchTodayTodos,

@@ -19,6 +19,9 @@ export const useSettingsStore = defineStore('settings', () => {
   const reminderInterval = computed(() => settings.value.reminderInterval)
   const overtimeReminderInterval = computed(() => settings.value.overtimeReminderInterval)
   const idleTimeout = computed(() => settings.value.idleTimeout)
+  const floatingX = computed(() => settings.value.floatingX)
+  const floatingY = computed(() => settings.value.floatingY)
+  const floatingPinned = computed(() => settings.value.floatingPinned)
 
   // --- Actions ---
 
@@ -50,6 +53,9 @@ export const useSettingsStore = defineStore('settings', () => {
           map.idle_timeout ?? String(DEFAULT_SETTINGS.idleTimeout),
           10,
         ),
+        floatingX: map.floating_x ? parseInt(map.floating_x, 10) : DEFAULT_SETTINGS.floatingX,
+        floatingY: map.floating_y ? parseInt(map.floating_y, 10) : DEFAULT_SETTINGS.floatingY,
+        floatingPinned: (map.floating_pinned ?? String(DEFAULT_SETTINGS.floatingPinned)) === 'true',
       }
     } catch (e) {
       error.value = `加载设置失败: ${e}`
@@ -88,6 +94,9 @@ export const useSettingsStore = defineStore('settings', () => {
     reminderInterval,
     overtimeReminderInterval,
     idleTimeout,
+    floatingX,
+    floatingY,
+    floatingPinned,
     loadSettings,
     updateSetting,
   }

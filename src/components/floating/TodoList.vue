@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { Todo } from '@/types/todo'
 import { useFocusStore } from '@/stores/focusStore'
 import { emitTo } from '@tauri-apps/api/event'
 import TodoTag from './TodoTag.vue'
+import OverflowAnim from './OverflowAnim.vue'
 
 const props = defineProps<{
   todos: Todo[]
   maxDisplay: number
   loading: boolean
+  newTodoId?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -21,6 +23,23 @@ const focusStore = useFocusStore()
 
 const visibleTodos = computed(() => props.todos.slice(0, props.maxDisplay))
 const hiddenCount = computed(() => Math.max(0, props.todos.length - props.maxDisplay))
+
+/** 新建的 TODO 是否在隐藏区域（溢出） */
+const isNewOverflow = computed(() => {
+  if (!props.newTodoId) return false
+  const idx = props.todos.findIndex(t => t.id === props.newTodoId)
+  return idx >= props.maxDisplay
+})
+
+const showOverflowAnim = ref(false)
+let lastAnimTodoId: string | null = null
+
+watch(() => [props.newTodoId, props.todos], () => {
+  if (props.newTodoId && isNewOverflow.value && lastAnimTodoId !== props.newTodoId) {
+    lastAnimTodoId = props.newTodoId
+    showOverflowAnim.value = true
+  }
+}, { deep: true })
 
 /** 双击打开管理界面并导航到今日 TODO */
 async function openManagement() {
@@ -35,46 +54,76 @@ async function openManagement() {
       <span class="text-xs text-gray-400">加载中...</span>
     </div>
 
-    <!-- 无 TODO -->
-    <div v-else-if="todos.length === 0" class="flex items-center justify-center h-full" @dblclick="openManagement">
-      <div class="text-center">
-        <p class="text-sm" style="color: rgba(0, 0, 0, 0.35);">暂无待办</p>
-        <p class="text-xs mt-1" style="color: rgba(0, 0, 0, 0.25);">双击添加 TODO</p>
-      </div>
-    </div>
-
-    <!-- TODO 列表 -->
     <template v-else>
-      <TodoTag
-        v-for="todo in visibleTodos"
-        :key="todo.id"
-        :todo="todo"
-        :is-active="focusStore.activeTodoId === todo.id && focusStore.isTimerActive"
-        :is-other-active="focusStore.hasActiveTodo && focusStore.activeTodoId !== todo.id"
-        @start="emit('start', $event)"
-        @end-focus="emit('endFocus')"
-        @end="emit('end', $event)"
-      />
+      <!-- 无 TODO -->
+      <Transition name="fade" mode="out-in">
+        <div
+          v-if="todos.length === 0"
+          key="empty"
+          class="flex items-center justify-center h-full"
+          @dblclick="openManagement"
+        >
+          <div class="text-center">
+            <p class="text-sm" style="color: rgba(0, 0, 0, 0.35);">暂无待办</p>
+            <p class="text-xs mt-1" style="color: rgba(0, 0, 0, 0.25);">双击添加 TODO</p>
+          </div>
+        </div>
 
-      <!-- 超出上限时显示省略号 -->
-      <div v-if="hiddenCount > 0" class="text-center" style="line-height: 1; margin-top: 1px;">
-        <span style="font-size: 10px; font-weight: bold; color: rgba(0, 0, 0, 0.25);">...</span>
-      </div>
+        <!-- TODO 列表 -->
+        <div v-else key="list">
+          <TodoTag
+            v-for="todo in visibleTodos"
+            :key="todo.id"
+            :todo="todo"
+            :is-active="focusStore.activeTodoId === todo.id && focusStore.isTimerActive"
+            :is-other-active="focusStore.hasActiveTodo && focusStore.activeTodoId !== todo.id"
+            :is-new="todo.id === newTodoId"
+            @start="emit('start', $event)"
+            @end-focus="emit('endFocus')"
+            @end="emit('end', $event)"
+          />
+
+          <!-- 溢出动画：新建 TODO 达上限时，Tag 向下融入省略号 -->
+          <OverflowAnim
+            v-if="showOverflowAnim"
+            :ellipsis-exists="hiddenCount > 1"
+            @done="showOverflowAnim = false"
+          />
+
+          <!-- 超出上限时显示省略号 -->
+          <div v-if="hiddenCount > 0" class="text-center ellipsis-container">
+            <span class="ellipsis-text">...</span>
+          </div>
+        </div>
+      </Transition>
     </template>
   </div>
 </template>
 
 <style scoped>
-.scrollbar-thin::-webkit-scrollbar {
-  width: 3px;
+/* 空状态 ↔ 列表 切换动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
+/* 省略号容器 */
+.ellipsis-container {
+  margin-top: 2px;
+  padding: 2px 0;
+}
+
+.ellipsis-text {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: rgba(0, 0, 0, 0.35);
+  line-height: 1;
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.2);
 }
 </style>
