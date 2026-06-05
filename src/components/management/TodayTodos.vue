@@ -36,7 +36,6 @@ async function handleAdd() {
   }
   adding.value = true
   await todoStore.createTodo(newTitle.value.trim())
-  await todoStore.fetchTodayTodos()
   newTitle.value = ''
   adding.value = false
 }
@@ -49,7 +48,6 @@ function startEdit(todo: Todo) {
 async function saveEdit(todo: Todo) {
   if (!editTitle.value.trim()) return
   await todoStore.updateTodo(todo.id, { title: editTitle.value.trim() })
-  await todoStore.fetchTodayTodos()
   editingId.value = null
 }
 
@@ -59,13 +57,11 @@ function cancelEdit() {
 
 async function handleComplete(todo: Todo) {
   await todoStore.updateTodo(todo.id, { completed: 1 })
-  await todoStore.fetchTodayTodos()
   message.success('已标记完成')
 }
 
 async function handleDelete(todo: Todo) {
   await todoStore.deleteTodo(todo.id)
-  await todoStore.fetchTodayTodos()
   message.success('已删除')
 }
 

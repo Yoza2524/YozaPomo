@@ -21,7 +21,7 @@ pub fn create_todo(app: tauri::AppHandle, db: State<Database>, input: CreateTodo
     )
     .map_err(|e| e.to_string())?;
 
-    let _ = app.emit("todo-changed", ());
+    let _ = app.emit("todo-changed", &id);
 
     Ok(Todo {
         id,
