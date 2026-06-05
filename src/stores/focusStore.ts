@@ -3,10 +3,12 @@ import { ref, computed } from 'vue'
 import type { FocusSession, FocusStatus, TodayFocusStats } from '@/types/focus'
 import { useTimer } from '@/composables/useTimer'
 import { db } from '@/utils/database'
+import { useSettingsStore } from './settingsStore'
 
 export const useFocusStore = defineStore('focus', () => {
   // --- Timer ---
   const timer = useTimer()
+  const settingsStore = useSettingsStore()
 
   // --- State ---
   const status = ref<FocusStatus>('idle')
@@ -134,8 +136,8 @@ export const useFocusStore = defineStore('focus', () => {
   /** 开始休息 */
   function startRest() {
     status.value = 'resting'
-    // 使用设置中的休息时长，如果没设置则默认 5 分钟
-    const restDuration = 300 // TODO: 从设置中读取
+    // 从设置中读取休息时长
+    const restDuration = settingsStore.restDuration
     timer.start(restDuration)
   }
 
