@@ -22,7 +22,6 @@ export const useFocusStore = defineStore('focus', () => {
 
   // --- Getters ---
   const isFocusing = computed(() => status.value === 'focusing')
-  const isPaused = computed(() => status.value === 'paused')
   const isIdle = computed(() => status.value === 'idle')
   const isOvertime = computed(() => timer.status.value === 'overtime')
   const isCompleted = computed(() => status.value === 'completed')
@@ -38,7 +37,6 @@ export const useFocusStore = defineStore('focus', () => {
   const isTimerActive = computed(
     () =>
       timer.status.value === 'running' ||
-      timer.status.value === 'paused' ||
       timer.status.value === 'overtime',
   )
 
@@ -69,18 +67,6 @@ export const useFocusStore = defineStore('focus', () => {
       error.value = `开始专注失败: ${e}`
       return null
     }
-  }
-
-  /** 暂停专注 */
-  function pauseFocus() {
-    if (status.value !== 'focusing') return
-    status.value = 'paused'
-  }
-
-  /** 恢复专注 */
-  function resumeFocus() {
-    if (status.value !== 'paused' || !currentSession.value) return
-    status.value = 'focusing'
   }
 
   /** 完成专注 */
@@ -191,7 +177,6 @@ export const useFocusStore = defineStore('focus', () => {
     error,
     // Getters
     isFocusing,
-    isPaused,
     isIdle,
     isOvertime,
     isCompleted,
@@ -202,8 +187,6 @@ export const useFocusStore = defineStore('focus', () => {
     todaySessionCount,
     // Actions
     startFocus,
-    pauseFocus,
-    resumeFocus,
     completeFocus,
     abortFocus,
     startRest,

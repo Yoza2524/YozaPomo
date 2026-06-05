@@ -6,15 +6,12 @@ import TodoContextMenu from './TodoContextMenu.vue'
 const props = defineProps<{
   todo: Todo
   isActive: boolean
-  isPaused: boolean
   /** 有另一个 TODO 在专注中 */
   isOtherActive: boolean
 }>()
 
 const emit = defineEmits<{
   start: [todo: Todo]
-  pause: []
-  resume: []
   endFocus: []
   end: [todo: Todo]
 }>()
@@ -24,8 +21,7 @@ const menuX = ref(0)
 const menuY = ref(0)
 
 const tagClass = computed(() => {
-  if (props.isActive && !props.isPaused) return 'todo-active'
-  if (props.isPaused) return 'todo-paused'
+  if (props.isActive) return 'todo-active'
   return 'todo-default'
 })
 
@@ -61,8 +57,7 @@ function handleEnd() {
     <div class="flex items-center justify-between">
       <span class="text-sm font-medium truncate flex-1 mr-2" :class="{
         'text-gray-800': !isActive,
-        'text-green-700': isActive && !isPaused,
-        'text-amber-600': isPaused,
+        'text-green-700': isActive,
       }">
         {{ todo.title }}
       </span>
@@ -75,10 +70,7 @@ function handleEnd() {
         :x="menuX"
         :y="menuY"
         :is-active="isActive"
-        :is-paused="isPaused"
         @start="emit('start', todo); showMenu = false"
-        @pause="emit('pause'); showMenu = false"
-        @resume="emit('resume'); showMenu = false"
         @end="handleEnd(); showMenu = false"
         @close="showMenu = false"
       />
@@ -103,13 +95,6 @@ function handleEnd() {
   border: 2px solid #22c55e;
   box-shadow: 0 0 12px rgba(34, 197, 94, 0.25);
   animation: breathe 2s ease-in-out infinite;
-}
-
-/* 暂停状态 */
-.todo-paused {
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid #f59e0b;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);
 }
 
 /* 其他 TODO 在专注中 — 不可交互 */

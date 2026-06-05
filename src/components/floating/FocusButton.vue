@@ -11,7 +11,6 @@ const settingsStore = useSettingsStore()
 const buttonText = computed(() => {
   if (focusStore.isResting) return '结束休息'
   if (focusStore.isOvertime) return '开始休息'
-  if (focusStore.isPaused) return '继续专注'
   if (focusStore.isFocusing) return '结束专注'
   return '开始专注'
 })
@@ -25,8 +24,6 @@ const countdownText = computed(() => {
   return formatDuration(remaining)
 })
 
-const isCountdownPaused = computed(() => focusStore.isPaused)
-
 // --- 错误 ---
 const errorMessage = ref('')
 
@@ -39,8 +36,6 @@ async function handleClick() {
   } else if (focusStore.isOvertime) {
     await focusStore.completeFocus()
     focusStore.startRest()
-  } else if (focusStore.isPaused) {
-    focusStore.resumeFocus()
   } else if (focusStore.isFocusing) {
     await focusStore.completeFocus()
   } else {
@@ -68,7 +63,7 @@ async function handleClick() {
       开始专注
     </button>
 
-    <!-- 专注中 / 暂停 / 超时 / 休息中：水平排布 -->
+    <!-- 专注中 / 超时 / 休息中：水平排布 -->
     <template v-else>
       <div class="flex gap-2">
         <!-- 左侧按钮 -->
@@ -89,9 +84,7 @@ async function handleClick() {
           :class="[
             focusStore.isOvertime || focusStore.isResting
               ? 'bg-amber-50 text-amber-600 border border-amber-200'
-              : isCountdownPaused
-                ? 'bg-gray-50 text-gray-400 border border-gray-200'
-                : 'bg-indigo-50 text-indigo-600 border border-indigo-200',
+              : 'bg-indigo-50 text-indigo-600 border border-indigo-200',
           ]"
           style="font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace; font-variant-numeric: tabular-nums; letter-spacing: 1px"
         >

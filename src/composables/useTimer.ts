@@ -4,7 +4,7 @@ const REMINDER_AFTER_SECONDS = 5 * 60 // 专注 5 分钟后提醒
 const REMINDER_AUTO_DISMISS_SECONDS = 60 // "我还在"按钮 1 分钟后自动消失
 
 /** 计时器状态 */
-export type TimerStatus = 'idle' | 'running' | 'paused' | 'overtime'
+export type TimerStatus = 'idle' | 'running' | 'overtime'
 
 /** useTimer 返回值 */
 export interface UseTimerReturn {
@@ -16,8 +16,6 @@ export interface UseTimerReturn {
   reminderDismissed: Ref<boolean>
 
   start: (plannedDuration: number) => void
-  pause: () => void
-  resume: () => void
   /** 结束计时，返回实际专注时长和状态 */
   stop: () => { actualDuration: number }
   /** 用户点击"我还在" */
@@ -88,7 +86,7 @@ export function useTimer(): UseTimerReturn {
 
     // 5 分钟后触发提醒
     reminderTimerId = setTimeout(() => {
-      if (status.value === 'running' || status.value === 'paused') {
+      if (status.value === 'running') {
         showReminder.value = true
 
         // 提醒出现后 1 分钟自动消失 → 强制异常结束
@@ -99,21 +97,6 @@ export function useTimer(): UseTimerReturn {
         }, REMINDER_AUTO_DISMISS_SECONDS * 1000)
       }
     }, REMINDER_AFTER_SECONDS * 1000)
-  }
-
-  function pause() {
-    if (status.value !== 'running' && status.value !== 'overtime') return
-    if (intervalId !== null) {
-      clearInterval(intervalId)
-      intervalId = null
-    }
-    status.value = 'paused'
-  }
-
-  function resume() {
-    if (status.value !== 'paused') return
-    status.value = remainingSeconds.value > 0 ? 'running' : 'overtime'
-    intervalId = setInterval(tick, 1000)
   }
 
   function stop(): { actualDuration: number } {
@@ -151,8 +134,6 @@ export function useTimer(): UseTimerReturn {
     showReminder,
     reminderDismissed,
     start,
-    pause,
-    resume,
     stop,
     dismissReminder,
     reset,

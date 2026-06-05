@@ -55,7 +55,6 @@ const statusLabels: Record<string, string> = {
   completed: '完成',
   abnormal: '异常',
   focusing: '专注中',
-  paused: '已暂停',
   active: '进行中',
 }
 const statusTypes: Record<string, 'success' | 'error' | 'default' | 'warning'> = {

@@ -3,13 +3,10 @@ defineProps<{
   x: number
   y: number
   isActive: boolean
-  isPaused: boolean
 }>()
 
 const emit = defineEmits<{
   start: []
-  pause: []
-  resume: []
   end: []
   close: []
 }>()
@@ -31,24 +28,6 @@ const emit = defineEmits<{
       @click="emit('start'); emit('close')"
     >
       <span class="w-4 text-center">▶</span> 开始专注
-    </button>
-
-    <!-- 暂停（激活且未暂停） -->
-    <button
-      v-if="isActive && !isPaused"
-      class="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors flex items-center gap-2"
-      @click="emit('pause'); emit('close')"
-    >
-      <span class="w-4 text-center">⏸</span> 暂停专注
-    </button>
-
-    <!-- 继续（暂停中） -->
-    <button
-      v-if="isPaused"
-      class="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors flex items-center gap-2"
-      @click="emit('resume'); emit('close')"
-    >
-      <span class="w-4 text-center">▶</span> 继续专注
     </button>
 
     <!-- 分割线 -->

@@ -141,16 +141,6 @@ async function handleTodoStart(todo: Todo) {
   await focusStore.startFocus(todo.id, duration)
 }
 
-/** 双击已激活 TODO → 暂停 */
-function handleTodoPause() {
-  focusStore.pauseFocus()
-}
-
-/** 双击暂停中 → 恢复 */
-function handleTodoResume() {
-  focusStore.resumeFocus()
-}
-
 /** 双击已激活 TODO → 结束专注 */
 async function handleEndFocus() {
   await focusStore.completeFocus()
@@ -202,8 +192,6 @@ function handleTodoNotesCancel() {
         :max-display="settingsStore.todoDisplayCount"
         :loading="todoStore.loading"
         @start="handleTodoStart"
-        @pause="handleTodoPause"
-        @resume="handleTodoResume"
         @end-focus="handleEndFocus"
         @end="handleTodoEnd"
       />
