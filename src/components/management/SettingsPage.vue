@@ -5,7 +5,6 @@ import {
   NInputNumber,
   NSwitch,
   NSelect,
-  NCard,
   NSpace,
   useMessage,
 } from 'naive-ui'
@@ -26,7 +25,9 @@ const notificationSound = ref('default')
 const reminderInterval = ref(5)
 const overtimeReminderInterval = ref(3)
 const idleTimeout = ref(30)
-const saving = ref(false)
+
+// 跟踪当前点击激活的输入框（仅鼠标点击后生效）
+const activeField = ref<string | null>(null)
 
 const soundOptions = [
   { label: '默认音效', value: 'default' },
@@ -54,7 +55,8 @@ onMounted(async () => {
   idleTimeout.value = settingsStore.settings.idleTimeout
 })
 
-async function handleSave() {
+/** 失去焦点自动保存 */
+async function autoSave() {
   const focusTotal = focusMin.value * 60 + focusSec.value
   const restTotal = restMin.value * 60 + restSec.value
   if (focusTotal < 5) {
@@ -65,7 +67,6 @@ async function handleSave() {
     message.warning('休息时长最低 5 秒')
     return
   }
-  saving.value = true
   try {
     await settingsStore.updateSetting('focusDuration', focusTotal)
     await settingsStore.updateSetting('restDuration', restTotal)
@@ -75,13 +76,9 @@ async function handleSave() {
     await settingsStore.updateSetting('reminderInterval', reminderInterval.value * 60)
     await settingsStore.updateSetting('overtimeReminderInterval', overtimeReminderInterval.value * 60)
     await settingsStore.updateSetting('idleTimeout', idleTimeout.value)
-    // 通知悬浮窗刷新设置
     await emit('settings-changed')
-    message.success('设置已保存')
   } catch (e) {
     message.error(`保存失败: ${e}`)
-  } finally {
-    saving.value = false
   }
 }
 
@@ -89,12 +86,15 @@ function handleTestSound() {
   playFocusEndSound(notificationSound.value === 'default' ? undefined : notificationSound.value)
 }
 
-/** 滚轮增减数值 */
+/** 滚轮增减数值（仅在对应输入框聚焦时生效） */
 function handleWheel(
   e: WheelEvent,
+  fieldName: string,
   current: number,
   opts: { min: number; max: number; step: number },
 ): number {
+  if (activeField.value !== fieldName) return current
+  e.preventDefault()
   e.preventDefault()
   const delta = e.deltaY < 0 ? opts.step : -opts.step
   const next = Math.round((current + delta) / opts.step) * opts.step
@@ -103,193 +103,164 @@ function handleWheel(
 </script>
 
 <template>
-  <div class="settings-page p-4 h-full">
-    <NCard title="应用设置" size="small" class="h-full">
-      <div class="space-y-5">
-        <!-- 默认专注时长 -->
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-sm font-medium text-gray-700">默认专注时长</div>
-            <div class="text-xs text-gray-400">每次专注的默认时长（最低 5 秒）</div>
-          </div>
-          <NSpace size="small" align="center">
-            <div @wheel="focusMin = handleWheel($event, focusMin, { min: 0, max: 120, step: 1 })">
-              <NInputNumber
-                :value="focusMin"
-                @update:value="focusMin = $event ?? focusMin"
-                :min="0"
-                :max="120"
-                :step="1"
-                :show-button="false"
-                class="w-14"
-                placeholder="分"
-              />
+  <div class="settings-page p-4 h-full overflow-auto">
+    <div class="space-y-6">
+
+      <!-- 专注时长 -->
+      <div>
+        <div class="section-title">专注时长</div>
+        <div class="section-group">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">专注时长</div>
+              <div class="setting-desc">每次专注的时长</div>
             </div>
-            <span class="text-xs text-gray-400">分</span>
-            <div @wheel="focusSec = handleWheel($event, focusSec, { min: 0, max: 59, step: 5 })">
-              <NInputNumber
-                :value="focusSec"
-                @update:value="focusSec = $event ?? focusSec"
-                :min="0"
-                :max="59"
-                :step="5"
-                :show-button="false"
-                class="w-14"
-                placeholder="秒"
-              />
+            <NSpace size="small" align="center">
+              <div @wheel="focusMin = handleWheel($event, 'focusMin', focusMin, { min: 0, max: 120, step: 1 })">
+                <NInputNumber :value="focusMin" @update:value="focusMin = $event ?? focusMin" @mousedown="activeField = 'focusMin'" @blur="activeField = null; autoSave()" :min="0" :max="120" :step="1" :show-button="false" class="w-14" placeholder="分" />
+              </div>
+              <span class="text-xs text-gray-400">分</span>
+              <div @wheel="focusSec = handleWheel($event, 'focusSec', focusSec, { min: 0, max: 59, step: 5 })">
+                <NInputNumber :value="focusSec" @update:value="focusSec = $event ?? focusSec" @mousedown="activeField = 'focusSec'" @blur="activeField = null; autoSave()" :min="0" :max="59" :step="5" :show-button="false" class="w-14" placeholder="秒" />
+              </div>
+              <span class="text-xs text-gray-400">秒</span>
+            </NSpace>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">休息时长</div>
+              <div class="setting-desc">专注结束后的休息时长</div>
             </div>
-            <span class="text-xs text-gray-400">秒</span>
-          </NSpace>
-        </div>
-
-        <!-- 休息时长 -->
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-sm font-medium text-gray-700">休息时长</div>
-            <div class="text-xs text-gray-400">专注结束后的休息时间（最低 5 秒）</div>
-          </div>
-          <NSpace size="small" align="center">
-            <div @wheel="restMin = handleWheel($event, restMin, { min: 0, max: 30, step: 1 })">
-              <NInputNumber
-                :value="restMin"
-                @update:value="restMin = $event ?? restMin"
-                :min="0"
-                :max="30"
-                :step="1"
-                :show-button="false"
-                class="w-14"
-                placeholder="分"
-              />
-            </div>
-            <span class="text-xs text-gray-400">分</span>
-            <div @wheel="restSec = handleWheel($event, restSec, { min: 0, max: 59, step: 5 })">
-              <NInputNumber
-                :value="restSec"
-                @update:value="restSec = $event ?? restSec"
-                :min="0"
-                :max="59"
-                :step="5"
-                :show-button="false"
-                class="w-14"
-                placeholder="秒"
-              />
-            </div>
-            <span class="text-xs text-gray-400">秒</span>
-          </NSpace>
-        </div>
-
-        <!-- 显示 TODO 数量 -->
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-sm font-medium text-gray-700">悬浮窗 TODO 数量</div>
-            <div class="text-xs text-gray-400">悬浮窗显示的 TODO 标签数量上限</div>
-          </div>
-          <div @wheel="todoDisplayCount = handleWheel($event, todoDisplayCount, { min: 1, max: 10, step: 1 })">
-            <NInputNumber
-              :value="todoDisplayCount"
-              @update:value="todoDisplayCount = $event ?? todoDisplayCount"
-              :min="1"
-              :max="10"
-              :step="1"
-              :show-button="false"
-              class="w-14"
-            />
-          </div>
-        </div>
-
-        <!-- 显示倒计时 -->
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-sm font-medium text-gray-700">显示倒计时数字</div>
-            <div class="text-xs text-gray-400">悬浮窗是否显示倒计时数字</div>
-          </div>
-          <NSwitch v-model:value="showCountdown" />
-        </div>
-
-        <!-- 提示音 -->
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-sm font-medium text-gray-700">通知音效</div>
-            <div class="text-xs text-gray-400">专注结束和提醒时的提示音</div>
-          </div>
-          <NSpace size="small">
-            <NSelect
-              v-model:value="notificationSound"
-              :options="soundOptions"
-              class="w-28"
-            />
-            <NButton @click="handleTestSound">试听</NButton>
-          </NSpace>
-        </div>
-
-        <!-- 专注检测间隔 -->
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-sm font-medium text-gray-700">专注检测间隔</div>
-            <div class="text-xs text-gray-400">专注状态下每（分）检测</div>
-          </div>
-          <div @wheel="reminderInterval = handleWheel($event, reminderInterval, { min: 1, max: 30, step: 1 })">
-            <NInputNumber
-              :value="reminderInterval"
-              @update:value="reminderInterval = $event ?? reminderInterval"
-              :min="1"
-              :max="30"
-              :step="1"
-              :show-button="false"
-              class="w-14"
-            />
-          </div>
-        </div>
-
-        <!-- 超时专注检测间隔 -->
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-sm font-medium text-gray-700">超时专注检测间隔</div>
-            <div class="text-xs text-gray-400">超时专注状态下每（分）检测</div>
-          </div>
-          <div @wheel="overtimeReminderInterval = handleWheel($event, overtimeReminderInterval, { min: 1, max: 15, step: 1 })">
-            <NInputNumber
-              :value="overtimeReminderInterval"
-              @update:value="overtimeReminderInterval = $event ?? overtimeReminderInterval"
-              :min="1"
-              :max="15"
-              :step="1"
-              :show-button="false"
-              class="w-14"
-            />
-          </div>
-        </div>
-
-        <!-- 异常检测持续时长 -->
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-sm font-medium text-gray-700">异常检测持续时长</div>
-            <div class="text-xs text-gray-400">检测无操作（秒）后异常终止</div>
-          </div>
-          <div @wheel="idleTimeout = handleWheel($event, idleTimeout, { min: 3, max: 90, step: 5 })">
-            <NInputNumber
-              :value="idleTimeout"
-              @update:value="idleTimeout = $event ?? idleTimeout"
-              :min="3"
-              :max="90"
-              :step="5"
-              :show-button="false"
-              class="w-14"
-            />
+            <NSpace size="small" align="center">
+              <div @wheel="restMin = handleWheel($event, 'restMin', restMin, { min: 0, max: 30, step: 1 })">
+                <NInputNumber :value="restMin" @update:value="restMin = $event ?? restMin" @mousedown="activeField = 'restMin'" @blur="activeField = null; autoSave()" :min="0" :max="30" :step="1" :show-button="false" class="w-14" placeholder="分" />
+              </div>
+              <span class="text-xs text-gray-400">分</span>
+              <div @wheel="restSec = handleWheel($event, 'restSec', restSec, { min: 0, max: 59, step: 5 })">
+                <NInputNumber :value="restSec" @update:value="restSec = $event ?? restSec" @mousedown="activeField = 'restSec'" @blur="activeField = null; autoSave()" :min="0" :max="59" :step="5" :show-button="false" class="w-14" placeholder="秒" />
+              </div>
+              <span class="text-xs text-gray-400">秒</span>
+            </NSpace>
           </div>
         </div>
       </div>
 
-      <div class="mt-6">
-        <NButton type="primary" :loading="saving" @click="handleSave" block>
-          保存设置
-        </NButton>
+      <!-- 显示 -->
+      <div>
+        <div class="section-title">显示</div>
+        <div class="section-group">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">悬浮窗 TODO 数量</div>
+              <div class="setting-desc">悬浮窗显示的 TODO 标签数量上限</div>
+            </div>
+            <div @wheel="todoDisplayCount = handleWheel($event, 'todoDisplayCount', todoDisplayCount, { min: 1, max: 10, step: 1 })">
+              <NInputNumber :value="todoDisplayCount" @update:value="todoDisplayCount = $event ?? todoDisplayCount" @mousedown="activeField = 'todoDisplayCount'" @blur="activeField = null; autoSave()" :min="1" :max="10" :step="1" :show-button="false" class="w-14" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">显示倒计时数字</div>
+              <div class="setting-desc">悬浮窗是否显示倒计时数字</div>
+            </div>
+            <NSwitch v-model:value="showCountdown" @update:value="autoSave" />
+          </div>
+        </div>
       </div>
-    </NCard>
+
+      <!-- 提醒 -->
+      <div>
+        <div class="section-title">提醒</div>
+        <div class="section-group">
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">通知音效</div>
+              <div class="setting-desc">专注结束和提醒时的提示音</div>
+            </div>
+            <NSpace size="small">
+              <NSelect v-model:value="notificationSound" :options="soundOptions" class="w-28" @update:value="autoSave" />
+              <NButton @click="handleTestSound">试听</NButton>
+            </NSpace>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">专注检测间隔</div>
+              <div class="setting-desc">专注状态下每（分）检测</div>
+            </div>
+            <div @wheel="reminderInterval = handleWheel($event, 'reminderInterval', reminderInterval, { min: 1, max: 30, step: 1 })">
+              <NInputNumber :value="reminderInterval" @update:value="reminderInterval = $event ?? reminderInterval" @mousedown="activeField = 'reminderInterval'" @blur="activeField = null; autoSave()" :min="1" :max="30" :step="1" :show-button="false" class="w-14" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">超时专注检测间隔</div>
+              <div class="setting-desc">超时专注状态下每（分）检测</div>
+            </div>
+            <div @wheel="overtimeReminderInterval = handleWheel($event, 'overtimeReminderInterval', overtimeReminderInterval, { min: 1, max: 15, step: 1 })">
+              <NInputNumber :value="overtimeReminderInterval" @update:value="overtimeReminderInterval = $event ?? overtimeReminderInterval" @mousedown="activeField = 'overtimeReminderInterval'" @blur="activeField = null; autoSave()" :min="1" :max="15" :step="1" :show-button="false" class="w-14" />
+            </div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">异常检测持续时长</div>
+              <div class="setting-desc">检测无操作（秒）后异常终止</div>
+            </div>
+            <div @wheel="idleTimeout = handleWheel($event, 'idleTimeout', idleTimeout, { min: 3, max: 90, step: 5 })">
+              <NInputNumber :value="idleTimeout" @update:value="idleTimeout = $event ?? idleTimeout" @mousedown="activeField = 'idleTimeout'" @blur="activeField = null; autoSave()" :min="3" :max="90" :step="5" :show-button="false" class="w-14" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </template>
 
 <style>
+/* 分块标题 */
+.settings-page .section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-left: 4px;
+  margin-bottom: 8px;
+  user-select: none;
+}
+
+/* 分块容器 */
+.settings-page .section-group {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* 设置行 */
+.settings-page .setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  user-select: none;
+}
+
+.settings-page .setting-row + .setting-row {
+  border-top: 1px solid #f5f5f5;
+}
+
+.settings-page .setting-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.settings-page .setting-desc {
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
+}
+
 /* 隐藏原生数字输入框的上下箭头 */
 .settings-page input::-webkit-outer-spin-button,
 .settings-page input::-webkit-inner-spin-button {
