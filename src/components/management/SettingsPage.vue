@@ -155,7 +155,6 @@ function handleTestSound() {
             :min="1"
             :max="10"
             :step="1"
-            class="w-12"
           />
         </div>
 
@@ -196,7 +195,6 @@ function handleTestSound() {
             :min="1"
             :max="30"
             :step="1"
-            class="w-12"
           />
         </div>
 
@@ -211,7 +209,6 @@ function handleTestSound() {
             :min="1"
             :max="15"
             :step="1"
-            class="w-12"
           />
         </div>
 
@@ -226,7 +223,6 @@ function handleTestSound() {
             :min="3"
             :max="90"
             :step="1"
-            class="w-12"
           />
         </div>
       </div>
@@ -241,45 +237,39 @@ function handleTestSound() {
 </template>
 
 <style>
-/* NInputNumber 加减号：上下排列 + 半透明 */
-.settings-page .n-input-number-handle {
+/* NInputNumber 加减号：上下排列 + 半透明 + 缩小 */
+.settings-page .n-input-number .n-input__suffix {
   display: flex !important;
   flex-direction: column !important;
-  width: 20px !important;
-  border-left: 1px solid rgba(0, 0, 0, 0.08) !important;
-}
-
-.settings-page .n-input-number-handle--increment,
-.settings-page .n-input-number-handle--decrement {
-  flex: 1 !important;
-  height: 50% !important;
-  display: flex !important;
   align-items: center !important;
-  justify-content: center !important;
-  opacity: 0.5 !important;
-  background: transparent !important;
-  border: none !important;
-  cursor: pointer !important;
+  gap: 0 !important;
+  margin-left: 2px !important;
 }
 
-.settings-page .n-input-number-handle--increment {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+.settings-page .n-input-number .n-input__suffix .n-button {
+  opacity: 0.4 !important;
+  padding: 0 !important;
+  height: 14px !important;
+  min-height: 14px !important;
+  width: 16px !important;
+  font-size: 10px !important;
 }
 
-.settings-page .n-input-number-handle--increment:hover,
-.settings-page .n-input-number-handle--decrement:hover {
-  opacity: 0.8 !important;
-  background: rgba(0, 0, 0, 0.04) !important;
+.settings-page .n-input-number .n-input__suffix .n-button:hover {
+  opacity: 0.7 !important;
 }
 
-.settings-page .n-input-number-handle--increment:active,
-.settings-page .n-input-number-handle--decrement:active {
+.settings-page .n-input-number .n-input__suffix .n-button:active {
   opacity: 1 !important;
-  background: rgba(0, 0, 0, 0.08) !important;
 }
 
-/* 专注/休息时长输入框更窄 */
+/* 所有数字输入框更窄 */
+.settings-page .n-input-number {
+  width: 4rem !important;
+}
+
+/* 专注/休息时长输入框 */
 .settings-page .duration-input {
-  width: 2.5rem !important;
+  width: 2rem !important;
 }
 </style>
