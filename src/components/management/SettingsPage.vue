@@ -300,6 +300,12 @@ function handleWheel(
   -moz-appearance: textfield;
 }
 
+/* 输入框文字居中 */
+.settings-page .n-input-number .n-input__input-el,
+.settings-page .n-input-number .n-input__input {
+  text-align: center !important;
+}
+
 /* iOS 风格：统一控件高度 34px，圆角 10px */
 .settings-page .n-input-number,
 .settings-page .n-input,
