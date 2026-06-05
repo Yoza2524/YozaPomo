@@ -92,7 +92,7 @@ async function openManagement() {
         </div>
 
         <!-- TODO 列表 -->
-        <div v-else key="list">
+        <div v-else key="list" class="relative">
           <TodoTag
             v-for="todo in visibleTodos"
             :key="todo.id"
@@ -141,45 +141,35 @@ async function openManagement() {
   padding: 2px 0;
 }
 
-/* 省略号出现动画 - 缓慢撑开高度 */
+/* 省略号出现动画 - 从上方滑入，不改变高度 */
 .ellipsis-enter {
-  animation: ellipsisIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-  overflow: hidden;
+  animation: ellipsisIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 省略号消失动画 - 缓慢收起高度 */
+/* 省略号消失动画 - 向上滑出，不改变高度 */
 .ellipsis-leave {
-  animation: ellipsisOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  overflow: hidden;
+  animation: ellipsisOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes ellipsisIn {
   0% {
     opacity: 0;
-    height: 0;
-    margin-top: 0;
-    padding: 0;
+    transform: translateY(-8px);
   }
   100% {
     opacity: 1;
-    height: 18px;
-    margin-top: 2px;
-    padding: 2px 0;
+    transform: translateY(0);
   }
 }
 
 @keyframes ellipsisOut {
   0% {
     opacity: 1;
-    height: 18px;
-    margin-top: 2px;
-    padding: 2px 0;
+    transform: translateY(0);
   }
   100% {
     opacity: 0;
-    height: 0;
-    margin-top: 0;
-    padding: 0;
+    transform: translateY(-8px);
   }
 }
 

@@ -29,6 +29,9 @@ function onAnimEnd() {
 
 <style scoped>
 .overflow-anim {
+  position: absolute;
+  left: 0;
+  right: 0;
   height: 0;
   overflow: visible;
   display: flex;
