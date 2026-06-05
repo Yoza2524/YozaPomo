@@ -49,49 +49,135 @@ async function handleClick() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-2">
+  <div class="focus-button-container">
     <!-- 错误提示 -->
-    <p v-if="errorMessage" class="text-xs text-red-400 text-center -mb-1">{{ errorMessage }}</p>
+    <p v-if="errorMessage" class="text-xs text-red-400 text-center mb-1">{{ errorMessage }}</p>
 
-    <!-- 空闲：全宽开始按钮 -->
-    <button
-      v-if="focusStore.isIdle"
-      class="w-full h-10 rounded-lg bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white text-sm font-medium transition-all duration-200 active:scale-[0.98]"
-      style="letter-spacing: 0.5px"
-      @click="handleClick"
-    >
-      开始专注
-    </button>
+    <!-- 按钮行 -->
+    <div class="button-row">
+      <!-- 左侧按钮 -->
+      <button
+        class="action-button"
+        :class="{
+          'idle': focusStore.isIdle,
+          'active': !focusStore.isIdle,
+          'primary': !(focusStore.isOvertime || focusStore.isResting),
+          'warning': focusStore.isOvertime || focusStore.isResting
+        }"
+        @click="handleClick"
+      >
+        {{ buttonText }}
+      </button>
 
-    <!-- 专注中 / 超时 / 休息中：水平排布 -->
-    <template v-else>
-      <div class="flex gap-2">
-        <!-- 左侧按钮 -->
-        <button
-          class="flex-1 h-10 rounded-lg text-white text-sm font-medium transition-all duration-200 active:scale-[0.98]"
-          :class="focusStore.isOvertime || focusStore.isResting
-            ? 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700'
-            : 'bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700'"
-          style="letter-spacing: 0.5px"
-          @click="handleClick"
-        >
-          {{ buttonText }}
-        </button>
-
-        <!-- 右侧倒计时 -->
-        <div
-          class="flex-1 h-10 rounded-lg flex items-center justify-center text-sm font-medium transition-colors"
-          :class="[
-            focusStore.isOvertime || focusStore.isResting
-              ? 'bg-amber-50 text-amber-600 border border-amber-200'
-              : 'bg-indigo-50 text-indigo-600 border border-indigo-200',
-          ]"
-          style="font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace; font-variant-numeric: tabular-nums; letter-spacing: 1px"
-        >
-          {{ countdownText }}
-        </div>
+      <!-- 右侧倒计时 -->
+      <div
+        class="countdown-block"
+        :class="{
+          'show': !focusStore.isIdle,
+          'primary': !(focusStore.isOvertime || focusStore.isResting),
+          'warning': focusStore.isOvertime || focusStore.isResting
+        }"
+      >
+        {{ countdownText }}
       </div>
-
-    </template>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.focus-button-container {
+  width: 100%;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  height: 40px;
+}
+
+/* 按钮 */
+.action-button {
+  height: 40px;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  will-change: width;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.2s ease;
+}
+
+/* 空闲：全宽 */
+.action-button.idle {
+  width: 100%;
+}
+
+/* 专注：固定宽度 */
+.action-button.active {
+  width: calc(50% - 4px);
+}
+
+/* 颜色 */
+.action-button.primary {
+  background-color: #6366f1;
+}
+
+.action-button.primary:hover {
+  background-color: #4f46e5;
+}
+
+.action-button.warning {
+  background-color: #f59e0b;
+}
+
+.action-button.warning:hover {
+  background-color: #d97706;
+}
+
+.action-button:active {
+  transform: scale(0.98);
+}
+
+/* 倒计时块 */
+.countdown-block {
+  width: 0;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+  overflow: hidden;
+  opacity: 0;
+  will-change: width, opacity;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease;
+}
+
+/* 显示时 */
+.countdown-block.show {
+  width: calc(50% - 4px);
+  opacity: 1;
+}
+
+/* 颜色 */
+.countdown-block.primary {
+  background-color: #eef2ff;
+  color: #6366f1;
+  border: 1px solid #c7d2fe;
+}
+
+.countdown-block.warning {
+  background-color: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+</style>
