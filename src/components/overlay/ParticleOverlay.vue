@@ -37,7 +37,8 @@ onMounted(async () => {
   // 初始化时设置窗口为全屏尺寸
   const win = getCurrentWebviewWindow()
   const { LogicalSize, LogicalPosition } = await import('@tauri-apps/api/window')
-  await win.setSize(new LogicalSize(window.screen.width, window.screen.height))
+  // 使用 availWidth/Height 排除任务栏区域
+  await win.setSize(new LogicalSize(window.screen.availWidth, window.screen.availHeight))
   await win.setPosition(new LogicalPosition(0, 0))
 
   unlistenFocusEnd = await listen('show-particle-focus-end', async () => {
