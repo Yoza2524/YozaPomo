@@ -7,6 +7,7 @@ import {
   NMessageProvider,
 } from 'naive-ui'
 import { listen } from '@tauri-apps/api/event'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import TodayTodos from './TodayTodos.vue'
 import YesterdayTodos from './YesterdayTodos.vue'
 import TodoListPage from './TodoListPage.vue'
@@ -33,9 +34,14 @@ onMounted(async () => {
   await settingsStore.loadSettings()
 
   try {
-    unlisten = await listen<string>('navigate', (event) => {
-      if (event.payload === 'settings') {
-        activeTab.value = 'settings'
+    unlisten = await listen<string>('navigate', async (event) => {
+      const validTabs = ['today', 'yesterday', 'all', 'history', 'settings']
+      if (validTabs.includes(event.payload)) {
+        activeTab.value = event.payload
+        // 确保管理窗口显示
+        const win = getCurrentWebviewWindow()
+        await win.show()
+        await win.setFocus()
       }
     })
   } catch {

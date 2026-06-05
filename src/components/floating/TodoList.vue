@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { Todo } from '@/types/todo'
 import { useFocusStore } from '@/stores/focusStore'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import TodoTag from './TodoTag.vue'
 
 const props = defineProps<{
@@ -20,6 +21,12 @@ const focusStore = useFocusStore()
 
 const visibleTodos = computed(() => props.todos.slice(0, props.maxDisplay))
 const hiddenCount = computed(() => Math.max(0, props.todos.length - props.maxDisplay))
+
+/** 双击打开管理界面并导航到今日 TODO */
+async function openManagement() {
+  const appWindow = getCurrentWebviewWindow()
+  await appWindow.emit('navigate', 'today')
+}
 </script>
 
 <template>
@@ -30,10 +37,10 @@ const hiddenCount = computed(() => Math.max(0, props.todos.length - props.maxDis
     </div>
 
     <!-- 无 TODO -->
-    <div v-else-if="todos.length === 0" class="flex items-center justify-center h-full">
+    <div v-else-if="todos.length === 0" class="flex items-center justify-center h-full" @dblclick="openManagement">
       <div class="text-center">
-        <p class="text-sm text-gray-400">暂无待办</p>
-        <p class="text-xs text-gray-300 mt-1">在管理界面添加 TODO</p>
+        <p class="text-sm" style="color: rgba(0, 0, 0, 0.35);">暂无待办</p>
+        <p class="text-xs mt-1" style="color: rgba(0, 0, 0, 0.25);">双击添加 TODO</p>
       </div>
     </div>
 
