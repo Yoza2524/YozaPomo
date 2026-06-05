@@ -103,8 +103,8 @@ function handleWheel(
 </script>
 
 <template>
-  <div class="settings-page p-4 max-w-lg">
-    <NCard title="应用设置" size="small">
+  <div class="settings-page p-4 h-full">
+    <NCard title="应用设置" size="small" class="h-full">
       <div class="space-y-5">
         <!-- 默认专注时长 -->
         <div class="flex items-center justify-between">
