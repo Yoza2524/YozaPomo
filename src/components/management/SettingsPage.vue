@@ -85,7 +85,7 @@ function handleTestSound() {
 </script>
 
 <template>
-  <div class="p-4 max-w-lg">
+  <div class="settings-page p-4 max-w-lg">
     <NCard title="应用设置" size="small">
       <div class="space-y-5">
         <!-- 默认专注时长 -->
@@ -100,7 +100,7 @@ function handleTestSound() {
               :min="0"
               :max="120"
               :step="1"
-              class="w-20"
+              class="duration-input"
               placeholder="分"
             />
             <span class="text-xs text-gray-400">分</span>
@@ -109,7 +109,7 @@ function handleTestSound() {
               :min="0"
               :max="59"
               :step="5"
-              class="w-20"
+              class="duration-input"
               placeholder="秒"
             />
             <span class="text-xs text-gray-400">秒</span>
@@ -128,7 +128,7 @@ function handleTestSound() {
               :min="0"
               :max="30"
               :step="1"
-              class="w-20"
+              class="duration-input"
               placeholder="分"
             />
             <span class="text-xs text-gray-400">分</span>
@@ -137,7 +137,7 @@ function handleTestSound() {
               :min="0"
               :max="59"
               :step="5"
-              class="w-20"
+              class="duration-input"
               placeholder="秒"
             />
             <span class="text-xs text-gray-400">秒</span>
@@ -155,7 +155,7 @@ function handleTestSound() {
             :min="1"
             :max="10"
             :step="1"
-            class="w-24"
+            class="w-12"
           />
         </div>
 
@@ -196,7 +196,7 @@ function handleTestSound() {
             :min="1"
             :max="30"
             :step="1"
-            class="w-24"
+            class="w-12"
           />
         </div>
 
@@ -211,7 +211,7 @@ function handleTestSound() {
             :min="1"
             :max="15"
             :step="1"
-            class="w-24"
+            class="w-12"
           />
         </div>
 
@@ -226,7 +226,7 @@ function handleTestSound() {
             :min="3"
             :max="90"
             :step="1"
-            class="w-24"
+            class="w-12"
           />
         </div>
       </div>
@@ -239,3 +239,47 @@ function handleTestSound() {
     </NCard>
   </div>
 </template>
+
+<style>
+/* NInputNumber 加减号：上下排列 + 半透明 */
+.settings-page .n-input-number-handle {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 20px !important;
+  border-left: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.settings-page .n-input-number-handle--increment,
+.settings-page .n-input-number-handle--decrement {
+  flex: 1 !important;
+  height: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0.5 !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+.settings-page .n-input-number-handle--increment {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.settings-page .n-input-number-handle--increment:hover,
+.settings-page .n-input-number-handle--decrement:hover {
+  opacity: 0.8 !important;
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+.settings-page .n-input-number-handle--increment:active,
+.settings-page .n-input-number-handle--decrement:active {
+  opacity: 1 !important;
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 专注/休息时长输入框更窄 */
+.settings-page .duration-input {
+  width: 2.5rem !important;
+}
+</style>
