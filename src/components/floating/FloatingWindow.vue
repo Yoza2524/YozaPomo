@@ -24,8 +24,6 @@ const focusStore = useFocusStore()
 const isOvertime = computed(() => focusStore.isOvertime)
 const isPinned = computed(() => settingsStore.floatingPinned)
 
-logWithSource('info', 'FloatingWindow[floating]', '悬浮窗组件初始化')
-
 // 窗口大小自适应内容
 const contentRef = ref<HTMLElement | null>(null)
 const { immediateResize } = useAutoResize(contentRef)
@@ -40,11 +38,8 @@ let unlistenSettingsChanged: UnlistenFn | null = null
 let unlistenUnpin: UnlistenFn | null = null
 
 onMounted(async () => {
-  logWithSource('info', 'FloatingWindow', '悬浮窗 onMounted 开始')
-
   try {
     await Promise.all([settingsStore.loadSettings(), todoStore.fetchTodayTodos()])
-    logWithSource('info', 'FloatingWindow', `加载完成: ${todoStore.todayTodos.length} 个 TODO`)
   } catch (e) {
     logWithSource('error', 'FloatingWindow', `加载数据失败: ${e}`)
   }
@@ -53,7 +48,6 @@ onMounted(async () => {
   if (settingsStore.floatingX !== null && settingsStore.floatingY !== null) {
     try {
       await appWindow.setPosition(new PhysicalPosition(settingsStore.floatingX, settingsStore.floatingY))
-      logWithSource('info', 'FloatingWindow', `恢复位置: (${settingsStore.floatingX}, ${settingsStore.floatingY})`)
     } catch (e) {
       logWithSource('warn', 'FloatingWindow', `恢复位置失败: ${e}`)
     }
@@ -61,7 +55,6 @@ onMounted(async () => {
 
   // 监听管理界面的 TODO 变更，同步刷新悬浮窗
   unlistenTodoChanged = await listen<string>('todo-changed', (event) => {
-    logWithSource('info', 'FloatingWindow', '收到 todo-changed 事件，刷新列表')
     todoStore.fetchTodayTodos()
     // 设置新创建的 TODO ID，用于动画
     if (event.payload) {
@@ -72,13 +65,11 @@ onMounted(async () => {
 
   // 监听设置变更，重新加载设置
   unlistenSettingsChanged = await listen('settings-changed', () => {
-    logWithSource('info', 'FloatingWindow', '收到 settings-changed 事件，重新加载')
     settingsStore.loadSettings()
   })
 
   // 监听托盘切换固定状态事件
   unlistenUnpin = await listen('toggle-pin-floating', () => {
-    logWithSource('info', 'FloatingWindow', '收到 toggle-pin-floating 事件')
     togglePin()
   })
 
@@ -93,8 +84,6 @@ onMounted(async () => {
       settingsStore.updateSetting('floatingY', pos.y)
     }
   })
-
-  logWithSource('info', 'FloatingWindow', '悬浮窗 onMounted 完成')
 })
 
 onUnmounted(() => {
