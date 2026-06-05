@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { Todo } from '@/types/todo'
 import { useFocusStore } from '@/stores/focusStore'
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { emitTo } from '@tauri-apps/api/event'
 import TodoTag from './TodoTag.vue'
 
 const props = defineProps<{
@@ -24,8 +24,7 @@ const hiddenCount = computed(() => Math.max(0, props.todos.length - props.maxDis
 
 /** 双击打开管理界面并导航到今日 TODO */
 async function openManagement() {
-  const appWindow = getCurrentWebviewWindow()
-  await appWindow.emit('navigate', 'today')
+  await emitTo('management', 'navigate', 'today')
 }
 </script>
 

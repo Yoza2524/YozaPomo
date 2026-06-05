@@ -6,7 +6,7 @@ import {
   dateZhCN,
   NMessageProvider,
 } from 'naive-ui'
-import { listen } from '@tauri-apps/api/event'
+import { listen, emit as emitEvent } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import TodayTodos from './TodayTodos.vue'
 import YesterdayTodos from './YesterdayTodos.vue'
@@ -40,8 +40,17 @@ onMounted(async () => {
         activeTab.value = event.payload
         // 确保管理窗口显示
         const win = getCurrentWebviewWindow()
+        try {
+          await win.unminimize()
+        } catch {
+          // 忽略未最小化时的错误
+        }
         await win.show()
         await win.setFocus()
+        // 导航到今日标签时聚焦输入框
+        if (event.payload === 'today') {
+          await emitEvent('focus-todo-input')
+        }
       }
     })
   } catch {

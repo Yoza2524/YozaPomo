@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { NButton, NInput, NModal, NSpace, NSpin, NEmpty, NPopconfirm, NTag, useMessage } from 'naive-ui'
 import { useTodoStore } from '@/stores/todoStore'
 import type { Todo } from '@/types/todo'
@@ -16,11 +16,18 @@ const detailTodo = ref<Todo | null>(null)
 
 onMounted(async () => {
   await todoStore.fetchTodayTodos()
+  // 监听导航事件，聚焦输入框
+  const { listen } = await import('@tauri-apps/api/event')
+  await listen('focus-todo-input', async () => {
+    await nextTick()
+    inputRef.value?.focus()
+  })
 })
 
 // 添加新 TODO
 const newTitle = ref('')
 const adding = ref(false)
+const inputRef = ref<InstanceType<typeof NInput> | null>(null)
 
 async function handleAdd() {
   if (!newTitle.value.trim()) {
@@ -77,6 +84,7 @@ function handleDetailClose() {
   <div class="p-4">
     <div class="flex items-center gap-2 mb-4">
       <NInput
+        ref="inputRef"
         v-model:value="newTitle"
         placeholder="添加今日 TODO..."
         class="flex-1"
