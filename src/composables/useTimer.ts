@@ -64,10 +64,10 @@ export function useTimer(): UseTimerReturn {
       remainingSeconds.value -= 1 // 变成负数，表示超时秒数
     }
 
-    // 周期性提醒检查
+    // 周期性提醒检查（interval <= 0 时不提醒，如休息状态）
     const interval =
       status.value === 'overtime' ? overtimeReminderIntervalSec : reminderIntervalSec
-    if (totalElapsed.value - lastReminderTick >= interval) {
+    if (interval > 0 && totalElapsed.value - lastReminderTick >= interval) {
       lastReminderTick = totalElapsed.value
       showReminder.value = true
     }

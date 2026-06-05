@@ -15,9 +15,9 @@ interface SoundConfig {
 }
 
 const SOUND_CONFIGS: Record<SoundType, SoundConfig> = {
-  focusEnd: { type: 'focusEnd', volume: 0.7, frequency: 880, duration: 0.8 },
-  reminder: { type: 'reminder', volume: 0.4, frequency: 660, duration: 0.3 },
-  restEnd: { type: 'restEnd', volume: 0.7, frequency: 1040, duration: 0.6 },
+  focusEnd: { type: 'focusEnd', volume: 0.5, frequency: 880, duration: 0.8 },
+  reminder: { type: 'reminder', volume: 0.3, frequency: 660, duration: 0.3 },
+  restEnd: { type: 'restEnd', volume: 0.5, frequency: 1040, duration: 0.6 },
 }
 
 let audioContext: AudioContext | null = null

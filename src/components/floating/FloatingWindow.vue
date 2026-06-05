@@ -81,6 +81,11 @@ watch(
   () => focusStore.showReminder,
   (showing) => {
     if (showing) {
+      // 超时状态：立即播放烟花 + 提示音
+      if (isOvertime.value) {
+        emitTo('overlay', 'show-particle-reminder')
+        playReminderSound(settingsStore.notificationSound)
+      }
       startReminderInputDetection()
     } else {
       emitTo('overlay', 'hide-reminder-text')
@@ -118,15 +123,10 @@ function startReminderInputDetection() {
       }
       const elapsed = Date.now() - startTime
 
-      // 2 秒宽限期到了，还没有输入 → 显示"还在吗？"
+      // 2 秒宽限期到了，还没有输入 → 显示"还在吗？"（声音已在提醒触发时播放）
       if (!gracePassed && elapsed >= REMINDER_GRACE_MS) {
         gracePassed = true
         emitTo('overlay', 'show-reminder-text')
-        playReminderSound(settingsStore.notificationSound)
-        // 超时状态下的提醒带小烟花特效
-        if (isOvertime.value) {
-          emitTo('overlay', 'show-particle-reminder')
-        }
       }
 
       // 超过异常检测时长 → 异常结束专注
