@@ -28,6 +28,8 @@ const idleTimeout = ref(30)
 
 // 跟踪当前点击激活的输入框（仅鼠标点击后生效）
 const activeField = ref<string | null>(null)
+// 存储聚焦时的原始值（用于 ESC 取消修改）
+const originalValue = ref<number>(0)
 
 const soundOptions = [
   { label: '默认音效', value: 'default' },
@@ -50,8 +52,9 @@ onMounted(async () => {
   todoDisplayCount.value = settingsStore.settings.todoDisplayCount
   showCountdown.value = settingsStore.settings.showCountdown
   notificationSound.value = settingsStore.settings.notificationSound
-  reminderInterval.value = settingsStore.settings.reminderInterval / 60
-  overtimeReminderInterval.value = settingsStore.settings.overtimeReminderInterval / 60
+  // [TEST] 临时改为秒级，方便测试
+  reminderInterval.value = settingsStore.settings.reminderInterval
+  overtimeReminderInterval.value = settingsStore.settings.overtimeReminderInterval
   idleTimeout.value = settingsStore.settings.idleTimeout
 })
 
@@ -73,8 +76,9 @@ async function autoSave() {
     await settingsStore.updateSetting('todoDisplayCount', todoDisplayCount.value)
     await settingsStore.updateSetting('showCountdown', showCountdown.value)
     await settingsStore.updateSetting('notificationSound', notificationSound.value)
-    await settingsStore.updateSetting('reminderInterval', reminderInterval.value * 60)
-    await settingsStore.updateSetting('overtimeReminderInterval', overtimeReminderInterval.value * 60)
+    // [TEST] 临时改为秒级，方便测试
+    await settingsStore.updateSetting('reminderInterval', reminderInterval.value)
+    await settingsStore.updateSetting('overtimeReminderInterval', overtimeReminderInterval.value)
     await settingsStore.updateSetting('idleTimeout', idleTimeout.value)
     await emit('settings-changed')
   } catch (e) {
@@ -84,6 +88,44 @@ async function autoSave() {
 
 function handleTestSound() {
   playFocusEndSound(notificationSound.value === 'default' ? undefined : notificationSound.value)
+}
+
+/** 回车保存并失焦 */
+function handleEnter(e: KeyboardEvent) {
+  autoSave()
+  ;(e.target as HTMLElement).blur()
+}
+
+/** 记录聚焦时的原始值 */
+function saveOriginal(fieldName: string) {
+  const fieldMap: Record<string, () => number> = {
+    focusMin: () => focusMin.value,
+    focusSec: () => focusSec.value,
+    restMin: () => restMin.value,
+    restSec: () => restSec.value,
+    todoDisplayCount: () => todoDisplayCount.value,
+    reminderInterval: () => reminderInterval.value,
+    overtimeReminderInterval: () => overtimeReminderInterval.value,
+    idleTimeout: () => idleTimeout.value,
+  }
+  originalValue.value = fieldMap[fieldName]?.() ?? 0
+}
+
+/** ESC 取消修改并失焦 */
+function handleEsc(fieldName: string, e: KeyboardEvent) {
+  const restoreMap: Record<string, (v: number) => void> = {
+    focusMin: (v) => { focusMin.value = v },
+    focusSec: (v) => { focusSec.value = v },
+    restMin: (v) => { restMin.value = v },
+    restSec: (v) => { restSec.value = v },
+    todoDisplayCount: (v) => { todoDisplayCount.value = v },
+    reminderInterval: (v) => { reminderInterval.value = v },
+    overtimeReminderInterval: (v) => { overtimeReminderInterval.value = v },
+    idleTimeout: (v) => { idleTimeout.value = v },
+  }
+  restoreMap[fieldName]?.(originalValue.value)
+  activeField.value = null
+  ;(e.target as HTMLElement).blur()
 }
 
 /** 滚轮增减数值（仅在对应输入框聚焦时生效） */
@@ -117,11 +159,11 @@ function handleWheel(
             </div>
             <NSpace size="small" align="center">
               <div @wheel="focusMin = handleWheel($event, 'focusMin', focusMin, { min: 0, max: 120, step: 1 })">
-                <NInputNumber :value="focusMin" @update:value="focusMin = $event ?? focusMin" @mousedown="activeField = 'focusMin'" @blur="activeField = null; autoSave()" :min="0" :max="120" :step="1" :show-button="false" class="w-14" placeholder="分" />
+                <NInputNumber :value="focusMin" @update:value="focusMin = $event ?? focusMin" @mousedown="activeField = 'focusMin'; saveOriginal('focusMin')" @blur="activeField = null; autoSave()" @keydown.enter="handleEnter" @keydown.esc="handleEsc(activeField!, $event)" :min="0" :max="120" :step="1" :show-button="false" placeholder="" class="w-14" />
               </div>
               <span class="text-xs text-gray-400">分</span>
               <div @wheel="focusSec = handleWheel($event, 'focusSec', focusSec, { min: 0, max: 59, step: 5 })">
-                <NInputNumber :value="focusSec" @update:value="focusSec = $event ?? focusSec" @mousedown="activeField = 'focusSec'" @blur="activeField = null; autoSave()" :min="0" :max="59" :step="5" :show-button="false" class="w-14" placeholder="秒" />
+                <NInputNumber :value="focusSec" @update:value="focusSec = $event ?? focusSec" @mousedown="activeField = 'focusSec'; saveOriginal('focusSec')" @blur="activeField = null; autoSave()" @keydown.enter="handleEnter" @keydown.esc="handleEsc(activeField!, $event)" :min="0" :max="59" :step="5" :show-button="false" placeholder="" class="w-14" />
               </div>
               <span class="text-xs text-gray-400">秒</span>
             </NSpace>
@@ -133,11 +175,11 @@ function handleWheel(
             </div>
             <NSpace size="small" align="center">
               <div @wheel="restMin = handleWheel($event, 'restMin', restMin, { min: 0, max: 30, step: 1 })">
-                <NInputNumber :value="restMin" @update:value="restMin = $event ?? restMin" @mousedown="activeField = 'restMin'" @blur="activeField = null; autoSave()" :min="0" :max="30" :step="1" :show-button="false" class="w-14" placeholder="分" />
+                <NInputNumber :value="restMin" @update:value="restMin = $event ?? restMin" @mousedown="activeField = 'restMin'; saveOriginal('restMin')" @blur="activeField = null; autoSave()" @keydown.enter="handleEnter" @keydown.esc="handleEsc(activeField!, $event)" :min="0" :max="30" :step="1" :show-button="false" placeholder="" class="w-14" />
               </div>
               <span class="text-xs text-gray-400">分</span>
               <div @wheel="restSec = handleWheel($event, 'restSec', restSec, { min: 0, max: 59, step: 5 })">
-                <NInputNumber :value="restSec" @update:value="restSec = $event ?? restSec" @mousedown="activeField = 'restSec'" @blur="activeField = null; autoSave()" :min="0" :max="59" :step="5" :show-button="false" class="w-14" placeholder="秒" />
+                <NInputNumber :value="restSec" @update:value="restSec = $event ?? restSec" @mousedown="activeField = 'restSec'; saveOriginal('restSec')" @blur="activeField = null; autoSave()" @keydown.enter="handleEnter" @keydown.esc="handleEsc(activeField!, $event)" :min="0" :max="59" :step="5" :show-button="false" placeholder="" class="w-14" />
               </div>
               <span class="text-xs text-gray-400">秒</span>
             </NSpace>
@@ -155,7 +197,7 @@ function handleWheel(
               <div class="setting-desc">悬浮窗显示的 TODO 标签数量上限</div>
             </div>
             <div @wheel="todoDisplayCount = handleWheel($event, 'todoDisplayCount', todoDisplayCount, { min: 1, max: 10, step: 1 })">
-              <NInputNumber :value="todoDisplayCount" @update:value="todoDisplayCount = $event ?? todoDisplayCount" @mousedown="activeField = 'todoDisplayCount'" @blur="activeField = null; autoSave()" :min="1" :max="10" :step="1" :show-button="false" class="w-14" />
+              <NInputNumber :value="todoDisplayCount" @update:value="todoDisplayCount = $event ?? todoDisplayCount" @mousedown="activeField = 'todoDisplayCount'; saveOriginal('todoDisplayCount')" @blur="activeField = null; autoSave()" @keydown.enter="handleEnter" @keydown.esc="handleEsc(activeField!, $event)" :min="1" :max="10" :step="1" :show-button="false" placeholder="" class="w-14" />
             </div>
           </div>
           <div class="setting-row">
@@ -185,19 +227,19 @@ function handleWheel(
           <div class="setting-row">
             <div>
               <div class="setting-label">专注检测间隔</div>
-              <div class="setting-desc">专注状态下每（分）检测</div>
+              <div class="setting-desc">专注状态下每（秒）检测 [TEST]</div>
             </div>
             <div @wheel="reminderInterval = handleWheel($event, 'reminderInterval', reminderInterval, { min: 1, max: 30, step: 1 })">
-              <NInputNumber :value="reminderInterval" @update:value="reminderInterval = $event ?? reminderInterval" @mousedown="activeField = 'reminderInterval'" @blur="activeField = null; autoSave()" :min="1" :max="30" :step="1" :show-button="false" class="w-14" />
+              <NInputNumber :value="reminderInterval" @update:value="reminderInterval = $event ?? reminderInterval" @mousedown="activeField = 'reminderInterval'; saveOriginal('reminderInterval')" @blur="activeField = null; autoSave()" @keydown.enter="handleEnter" @keydown.esc="handleEsc(activeField!, $event)" :min="1" :max="30" :step="1" :show-button="false" placeholder="" class="w-14" />
             </div>
           </div>
           <div class="setting-row">
             <div>
               <div class="setting-label">超时专注检测间隔</div>
-              <div class="setting-desc">超时专注状态下每（分）检测</div>
+              <div class="setting-desc">超时专注状态下每（秒）检测 [TEST]</div>
             </div>
             <div @wheel="overtimeReminderInterval = handleWheel($event, 'overtimeReminderInterval', overtimeReminderInterval, { min: 1, max: 15, step: 1 })">
-              <NInputNumber :value="overtimeReminderInterval" @update:value="overtimeReminderInterval = $event ?? overtimeReminderInterval" @mousedown="activeField = 'overtimeReminderInterval'" @blur="activeField = null; autoSave()" :min="1" :max="15" :step="1" :show-button="false" class="w-14" />
+              <NInputNumber :value="overtimeReminderInterval" @update:value="overtimeReminderInterval = $event ?? overtimeReminderInterval" @mousedown="activeField = 'overtimeReminderInterval'; saveOriginal('overtimeReminderInterval')" @blur="activeField = null; autoSave()" @keydown.enter="handleEnter" @keydown.esc="handleEsc(activeField!, $event)" :min="1" :max="15" :step="1" :show-button="false" placeholder="" class="w-14" />
             </div>
           </div>
           <div class="setting-row">
@@ -206,7 +248,7 @@ function handleWheel(
               <div class="setting-desc">检测无操作（秒）后异常终止</div>
             </div>
             <div @wheel="idleTimeout = handleWheel($event, 'idleTimeout', idleTimeout, { min: 3, max: 90, step: 5 })">
-              <NInputNumber :value="idleTimeout" @update:value="idleTimeout = $event ?? idleTimeout" @mousedown="activeField = 'idleTimeout'" @blur="activeField = null; autoSave()" :min="3" :max="90" :step="5" :show-button="false" class="w-14" />
+              <NInputNumber :value="idleTimeout" @update:value="idleTimeout = $event ?? idleTimeout" @mousedown="activeField = 'idleTimeout'; saveOriginal('idleTimeout')" @blur="activeField = null; autoSave()" @keydown.enter="handleEnter" @keydown.esc="handleEsc(activeField!, $event)" :min="3" :max="90" :step="5" :show-button="false" placeholder="" class="w-14" />
             </div>
           </div>
         </div>
