@@ -85,7 +85,7 @@ function handleTestSound() {
 </script>
 
 <template>
-  <div class="p-4 max-w-lg">
+  <div class="settings-page p-4 max-w-lg">
     <NCard title="应用设置" size="small">
       <div class="space-y-5">
         <!-- 默认专注时长 -->
@@ -95,25 +95,29 @@ function handleTestSound() {
             <div class="text-xs text-gray-400">每次专注的默认时长（最低 5 秒）</div>
           </div>
           <NSpace size="small" align="center">
-            <NInputNumber
-              v-model:value="focusMin"
-              :min="0"
-              :max="120"
-              :step="1"
-              :show-button="false"
-              class="w-14"
-              placeholder="分"
-            />
+            <div @wheel.prevent>
+              <NInputNumber
+                v-model:value="focusMin"
+                :min="0"
+                :max="120"
+                :step="1"
+                :show-button="false"
+                class="w-14"
+                placeholder="分"
+              />
+            </div>
             <span class="text-xs text-gray-400">分</span>
-            <NInputNumber
-              v-model:value="focusSec"
-              :min="0"
-              :max="59"
-              :step="5"
-              :show-button="false"
-              class="w-14"
-              placeholder="秒"
-            />
+            <div @wheel.prevent>
+              <NInputNumber
+                v-model:value="focusSec"
+                :min="0"
+                :max="59"
+                :step="5"
+                :show-button="false"
+                class="w-14"
+                placeholder="秒"
+              />
+            </div>
             <span class="text-xs text-gray-400">秒</span>
           </NSpace>
         </div>
@@ -125,25 +129,29 @@ function handleTestSound() {
             <div class="text-xs text-gray-400">专注结束后的休息时间（最低 5 秒）</div>
           </div>
           <NSpace size="small" align="center">
-            <NInputNumber
-              v-model:value="restMin"
-              :min="0"
-              :max="30"
-              :step="1"
-              :show-button="false"
-              class="w-14"
-              placeholder="分"
-            />
+            <div @wheel.prevent>
+              <NInputNumber
+                v-model:value="restMin"
+                :min="0"
+                :max="30"
+                :step="1"
+                :show-button="false"
+                class="w-14"
+                placeholder="分"
+              />
+            </div>
             <span class="text-xs text-gray-400">分</span>
-            <NInputNumber
-              v-model:value="restSec"
-              :min="0"
-              :max="59"
-              :step="5"
-              :show-button="false"
-              class="w-14"
-              placeholder="秒"
-            />
+            <div @wheel.prevent>
+              <NInputNumber
+                v-model:value="restSec"
+                :min="0"
+                :max="59"
+                :step="5"
+                :show-button="false"
+                class="w-14"
+                placeholder="秒"
+              />
+            </div>
             <span class="text-xs text-gray-400">秒</span>
           </NSpace>
         </div>
@@ -154,14 +162,16 @@ function handleTestSound() {
             <div class="text-sm font-medium text-gray-700">悬浮窗 TODO 数量</div>
             <div class="text-xs text-gray-400">悬浮窗显示的 TODO 标签数量上限</div>
           </div>
-          <NInputNumber
-            v-model:value="todoDisplayCount"
-            :min="1"
-            :max="10"
-            :step="1"
-            :show-button="false"
-            class="w-14"
-          />
+          <div @wheel.prevent>
+            <NInputNumber
+              v-model:value="todoDisplayCount"
+              :min="1"
+              :max="10"
+              :step="1"
+              :show-button="false"
+              class="w-14"
+            />
+          </div>
         </div>
 
         <!-- 显示倒计时 -->
@@ -196,14 +206,16 @@ function handleTestSound() {
             <div class="text-sm font-medium text-gray-700">专注提醒间隔</div>
             <div class="text-xs text-gray-400">专注状态下每隔多久检测是否在岗（分钟）</div>
           </div>
-          <NInputNumber
-            v-model:value="reminderInterval"
-            :min="1"
-            :max="30"
-            :step="1"
-            :show-button="false"
-            class="w-14"
-          />
+          <div @wheel.prevent>
+            <NInputNumber
+              v-model:value="reminderInterval"
+              :min="1"
+              :max="30"
+              :step="1"
+              :show-button="false"
+              class="w-14"
+            />
+          </div>
         </div>
 
         <!-- 超时提醒间隔 -->
@@ -212,14 +224,16 @@ function handleTestSound() {
             <div class="text-sm font-medium text-gray-700">超时提醒间隔</div>
             <div class="text-xs text-gray-400">超时状态下每隔多久检测是否在岗（分钟）</div>
           </div>
-          <NInputNumber
-            v-model:value="overtimeReminderInterval"
-            :min="1"
-            :max="15"
-            :step="1"
-            :show-button="false"
-            class="w-14"
-          />
+          <div @wheel.prevent>
+            <NInputNumber
+              v-model:value="overtimeReminderInterval"
+              :min="1"
+              :max="15"
+              :step="1"
+              :show-button="false"
+              class="w-14"
+            />
+          </div>
         </div>
 
         <!-- 异常检测持续时长 -->
@@ -228,14 +242,16 @@ function handleTestSound() {
             <div class="text-sm font-medium text-gray-700">异常检测持续时长</div>
             <div class="text-xs text-gray-400">无操作多久后异常结束专注（秒）</div>
           </div>
-          <NInputNumber
-            v-model:value="idleTimeout"
-            :min="3"
-            :max="90"
-            :step="1"
-            :show-button="false"
-            class="w-14"
-          />
+          <div @wheel.prevent>
+            <NInputNumber
+              v-model:value="idleTimeout"
+              :min="3"
+              :max="90"
+              :step="1"
+              :show-button="false"
+              class="w-14"
+            />
+          </div>
         </div>
       </div>
 
@@ -247,3 +263,15 @@ function handleTestSound() {
     </NCard>
   </div>
 </template>
+
+<style>
+/* 隐藏原生数字输入框的上下箭头 */
+.settings-page input::-webkit-outer-spin-button,
+.settings-page input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.settings-page input[type=number] {
+  -moz-appearance: textfield;
+}
+</style>
