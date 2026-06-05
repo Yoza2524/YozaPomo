@@ -41,6 +41,28 @@ watch(() => [props.newTodoId, props.todos], () => {
   }
 }, { deep: true })
 
+// 省略号动画状态
+const ellipsisVisible = ref(false)
+const ellipsisAnimClass = ref('')
+
+watch(hiddenCount, (newVal, oldVal) => {
+  if (newVal > 0 && oldVal === 0) {
+    // 首次出现：缓慢撑开
+    ellipsisVisible.value = true
+    ellipsisAnimClass.value = 'ellipsis-enter'
+  } else if (newVal === 0 && oldVal > 0) {
+    // 消失：缓慢收起
+    ellipsisAnimClass.value = 'ellipsis-leave'
+    setTimeout(() => {
+      ellipsisVisible.value = false
+      ellipsisAnimClass.value = ''
+    }, 350)
+  } else if (newVal > 0) {
+    // 数量变化但省略号仍在：无动画
+    ellipsisAnimClass.value = ''
+  }
+})
+
 /** 双击打开管理界面并导航到今日 TODO */
 async function openManagement() {
   await emitTo('management', 'navigate', 'today')
@@ -78,6 +100,7 @@ async function openManagement() {
             :is-active="focusStore.activeTodoId === todo.id && focusStore.isTimerActive"
             :is-other-active="focusStore.hasActiveTodo && focusStore.activeTodoId !== todo.id"
             :is-new="todo.id === newTodoId"
+            :is-overflow="todo.id === newTodoId && todos.length > maxDisplay"
             @start="emit('start', $event)"
             @end-focus="emit('endFocus')"
             @end="emit('end', $event)"
@@ -91,7 +114,7 @@ async function openManagement() {
           />
 
           <!-- 超出上限时显示省略号 -->
-          <div v-if="hiddenCount > 0" class="text-center ellipsis-container">
+          <div v-if="ellipsisVisible" class="text-center ellipsis-container" :class="ellipsisAnimClass">
             <span class="ellipsis-text">...</span>
           </div>
         </div>
@@ -116,6 +139,48 @@ async function openManagement() {
 .ellipsis-container {
   margin-top: 2px;
   padding: 2px 0;
+}
+
+/* 省略号出现动画 - 缓慢撑开高度 */
+.ellipsis-enter {
+  animation: ellipsisIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  overflow: hidden;
+}
+
+/* 省略号消失动画 - 缓慢收起高度 */
+.ellipsis-leave {
+  animation: ellipsisOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
+}
+
+@keyframes ellipsisIn {
+  0% {
+    opacity: 0;
+    height: 0;
+    margin-top: 0;
+    padding: 0;
+  }
+  100% {
+    opacity: 1;
+    height: 18px;
+    margin-top: 2px;
+    padding: 2px 0;
+  }
+}
+
+@keyframes ellipsisOut {
+  0% {
+    opacity: 1;
+    height: 18px;
+    margin-top: 2px;
+    padding: 2px 0;
+  }
+  100% {
+    opacity: 0;
+    height: 0;
+    margin-top: 0;
+    padding: 0;
+  }
 }
 
 .ellipsis-text {

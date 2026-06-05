@@ -1,5 +1,5 @@
 import { onMounted, onUnmounted, type Ref } from 'vue'
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { LogicalSize, LogicalPosition } from '@tauri-apps/api/window'
 import { logWithSource } from '@/utils/logger'
 
@@ -10,56 +10,63 @@ import { logWithSource } from '@/utils/logger'
  * 1. 监测内容容器的大小变化
  * 2. 动态调整窗口大小，只覆盖有内容的区域
  * 3. 透明区域不存在，点击自然穿透到下方窗口
+ *
+ * 策略：
+ * - 非动画时：ResizeObserver + debounce 调整大小
+ * - 动画时：ResizeObserver 触发后启动 rAF 循环，每帧同步窗口与内容
  */
 export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
   let resizeObserver: ResizeObserver | null = null
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
   let animationFrame: number | null = null
-  let isAnimating = false
+  let animCount = 0 // 正在进行的动画数量
 
-  // 动画期间主动驱动 resize（fire-and-forget，不等待 API 返回）
-  // 同时锚定右上角，避免窗口水平跳动
   function resizeImmediate() {
     const el = containerRef.value
     if (!el) return
-    const win = getCurrentWebviewWindow()
+    const win = getCurrentWindow()
     const rect = el.getBoundingClientRect()
     const contentHeight = Math.ceil(rect.height)
     const contentWidth = Math.max(Math.ceil(rect.width), 280)
     const finalHeight = Math.max(contentHeight, 120)
 
-    // 获取当前窗口尺寸，计算右上角锚点
-    win.outerSize().then(currentSize => {
-      win.outerPosition().then(currentPos => {
-        // 右上角 = 当前位置 + 当前宽度
-        const rightTopX = currentPos.x + currentSize.width
-        // 新位置 = 右上角 - 新宽度（保持右边缘不动）
-        const newX = rightTopX - contentWidth
-        win.setSize(new LogicalSize(contentWidth, finalHeight)).catch(() => {})
-        if (newX !== currentPos.x) {
-          win.setPosition(new LogicalPosition(newX, currentPos.y)).catch(() => {})
-        }
-      })
+    Promise.all([win.outerSize(), win.outerPosition()]).then(([currentSize, currentPos]) => {
+      const rightTopX = currentPos.x + currentSize.width
+      const newX = rightTopX - contentWidth
+      win.setSize(new LogicalSize(contentWidth, finalHeight)).catch(() => {})
+      if (newX !== currentPos.x) {
+        win.setPosition(new LogicalPosition(newX, currentPos.y)).catch(() => {})
+      }
     })
   }
 
-  function onAnimStart() {
-    isAnimating = true
+  // rAF 循环：动画期间每帧同步窗口大小
+  function startAnimLoop() {
+    if (animationFrame) return
     function frame() {
       resizeImmediate()
-      if (isAnimating) animationFrame = requestAnimationFrame(frame)
+      if (animCount > 0) animationFrame = requestAnimationFrame(frame)
+      else animationFrame = null
     }
-    if (animationFrame) cancelAnimationFrame(animationFrame)
     animationFrame = requestAnimationFrame(frame)
   }
 
-  function onAnimEnd() {
-    isAnimating = false
+  function stopAnimLoop() {
     if (animationFrame) {
       cancelAnimationFrame(animationFrame)
       animationFrame = null
     }
-    updateWindowSize()
+  }
+
+  // ResizeObserver 回调：动画期间完全跳过，避免读到旧数据
+  function onResize() {
+    if (animCount > 0) return
+    if (debounceTimer) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => {
+      // animationstart 可能在此期间触发
+      if (animCount > 0) return
+      resizeImmediate()
+    }, 16)
   }
 
   async function updateWindowSize() {
@@ -70,51 +77,26 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
     }
 
     try {
-      const win = getCurrentWebviewWindow()
+      const win = getCurrentWindow()
       const rect = el.getBoundingClientRect()
-
-      // 获取内容的实际尺寸（包括 padding）
       const contentHeight = Math.ceil(rect.height)
       const contentWidth = Math.max(Math.ceil(rect.width), 280)
-
-      // 设置最小高度，避免窗口太小
-      const minHeight = 120
-      const finalHeight = Math.max(contentHeight, minHeight)
-
-      // 获取当前窗口位置和大小
+      const finalHeight = Math.max(contentHeight, 120)
       const currentSize = await win.outerSize()
       const currentPos = await win.outerPosition()
-
-      // 获取屏幕尺寸（用于限制窗口位置）
       const screenWidth = window.screen.width
       const screenHeight = window.screen.height
-
-      // 计算新位置：保持右上角对齐
-      // 右上角坐标 = 当前位置.x + 当前宽度, 当前位置.y
       const rightTopX = currentPos.x + currentSize.width
-      const rightTopY = currentPos.y
-
-      // 新位置 = 右上角坐标 - 新宽度
       let newX = rightTopX - contentWidth
-      let newY = rightTopY
-
-      // 限制窗口位置在屏幕范围内（留 10px 边距）
+      let newY = currentPos.y
       newX = Math.max(10, Math.min(newX, screenWidth - contentWidth - 10))
       newY = Math.max(10, Math.min(newY, screenHeight - finalHeight - 10))
 
-      // 调整窗口大小和位置
       await win.setSize(new LogicalSize(contentWidth, finalHeight))
       await win.setPosition(new LogicalPosition(newX, newY))
-
     } catch (e) {
       logWithSource('error', 'useAutoResize[floating]', `调整窗口大小失败: ${e}`)
     }
-  }
-
-  // ResizeObserver 触发时只调整大小，不改位置，避免闪跳
-  function debounceUpdate() {
-    if (debounceTimer) clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(resizeImmediate, 16)
   }
 
   onMounted(() => {
@@ -130,21 +112,26 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
     updateWindowSize()
 
     // 监测内容大小变化
-    resizeObserver = new ResizeObserver(debounceUpdate)
+    resizeObserver = new ResizeObserver(onResize)
     resizeObserver.observe(el)
 
-    // 监听动画，动画期间主动驱动 resize
-    el.addEventListener('animationstart', onAnimStart)
-    el.addEventListener('animationend', onAnimEnd)
+    // 动画事件：用计数器跟踪嵌套动画，动画期间由 rAF 驱动 resize
+    el.addEventListener('animationstart', () => {
+      animCount++
+      startAnimLoop()
+    })
+    el.addEventListener('animationend', () => {
+      animCount = Math.max(0, animCount - 1)
+      if (animCount === 0) {
+        stopAnimLoop()
+        resizeImmediate()
+      }
+    })
   })
 
   onUnmounted(() => {
     logWithSource('info', 'useAutoResize[floating]', '清理自动调整大小')
-    const el = containerRef.value
-    if (el) {
-      el.removeEventListener('animationstart', onAnimStart)
-      el.removeEventListener('animationend', onAnimEnd)
-    }
+    stopAnimLoop()
     if (resizeObserver) {
       resizeObserver.disconnect()
       resizeObserver = null
@@ -152,10 +139,6 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
     if (debounceTimer) {
       clearTimeout(debounceTimer)
       debounceTimer = null
-    }
-    if (animationFrame) {
-      cancelAnimationFrame(animationFrame)
-      animationFrame = null
     }
   })
 

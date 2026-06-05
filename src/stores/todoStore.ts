@@ -21,7 +21,8 @@ export const useTodoStore = defineStore('todo', () => {
 
   /** 加载今日 TODO（仅未完成） */
   async function fetchTodayTodos(retryCount = 0) {
-    loading.value = true
+    // 首次加载才显示 loading，避免刷新时组件销毁重建导致闪烁
+    if (todayTodos.value.length === 0) loading.value = true
     error.value = null
     try {
       const today = getTodayDate()

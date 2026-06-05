@@ -54,10 +54,10 @@ onMounted(async () => {
   }
 
   // 监听管理界面的 TODO 变更，同步刷新悬浮窗
-  unlistenTodoChanged = await listen<string>('todo-changed', (event) => {
+  unlistenTodoChanged = await listen<string | null>('todo-changed', (event) => {
     todoStore.fetchTodayTodos()
     // 设置新创建的 TODO ID，用于动画
-    if (event.payload) {
+    if (event.payload && typeof event.payload === 'string') {
       todoStore.newTodoId = event.payload
       setTimeout(() => { todoStore.newTodoId = null }, 500)
     }

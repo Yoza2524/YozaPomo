@@ -10,6 +10,8 @@ const props = defineProps<{
   isOtherActive: boolean
   /** 是否是新创建的 TODO */
   isNew?: boolean
+  /** 新建时列表已满（溢出），动画不占据高度 */
+  isOverflow?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -52,7 +54,7 @@ function handleEnd() {
 
 <template>
   <div
-    :class="[tagClass, 'todo-tag rounded-xl px-3 py-2 mb-2 transition-all duration-300 select-none overflow-hidden', { 'todo-new': isNew }]"
+    :class="[tagClass, 'todo-tag rounded-xl px-3 py-2 mb-2 transition-all duration-300 select-none overflow-hidden', { 'todo-new': isNew && !isOverflow, 'todo-new-overflow': isNew && isOverflow }]"
     @dblclick="handleDoubleClick"
     @contextmenu="handleContextMenu"
   >
@@ -125,6 +127,22 @@ function handleEnd() {
     margin-bottom: 8px;
     padding-top: 8px;
     padding-bottom: 8px;
+  }
+}
+
+/* 列表已满时新建 - 用 transform 动画，不占据高度，不推动下方内容 */
+.todo-new-overflow {
+  animation: todoFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes todoFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
