@@ -75,7 +75,7 @@ onUnmounted(() => {
 <template>
   <div class="w-screen h-screen overflow-hidden pointer-events-none">
     <!-- 专注结束粒子动画 -->
-    <div v-if="showFocusEnd" class="absolute left-0 right-0" style="top: 0; height: 44vh;">
+    <div v-if="showFocusEnd" class="absolute inset-0">
       <ParticleCanvas
         :count="80"
         :colors="['#6366f1', '#818cf8', '#22c55e', '#4f46e5', '#a78bfa', '#f472b6', '#34d399']"
@@ -89,7 +89,7 @@ onUnmounted(() => {
     </div>
 
     <!-- 提醒粒子动画 -->
-    <div v-if="showReminder" class="absolute left-0 right-0" style="top: 0; height: 44vh;">
+    <div v-if="showReminder" class="absolute inset-0">
       <ParticleCanvas
         :count="40"
         :colors="['#f59e0b', '#fbbf24', '#fcd34d', '#fb923c']"
