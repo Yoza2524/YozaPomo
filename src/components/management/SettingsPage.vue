@@ -217,9 +217,8 @@ function handleWheel(
               v-model:value="notificationSound"
               :options="soundOptions"
               class="w-28"
-              size="small"
             />
-            <NButton size="tiny" @click="handleTestSound">试听</NButton>
+            <NButton @click="handleTestSound">试听</NButton>
           </NSpace>
         </div>
 
@@ -299,5 +298,37 @@ function handleWheel(
 }
 .settings-page input[type=number] {
   -moz-appearance: textfield;
+}
+
+/* iOS 风格：统一控件高度 34px，圆角 10px */
+.settings-page .n-input-number,
+.settings-page .n-input,
+.settings-page .n-select {
+  --n-height: 34px !important;
+  border-radius: 10px !important;
+}
+
+.settings-page .n-input {
+  border-radius: 10px !important;
+}
+.settings-page .n-input .n-input__border,
+.settings-page .n-input .n-input__state-border {
+  border-radius: 10px !important;
+}
+
+.settings-page .n-select .n-base-selection {
+  border-radius: 10px !important;
+  --n-height: 34px !important;
+}
+
+.settings-page .n-button {
+  border-radius: 10px !important;
+  height: 34px !important;
+}
+
+.settings-page .n-switch {
+  --n-height: 22px;
+  --n-width: 44px;
+  border-radius: 11px !important;
 }
 </style>
