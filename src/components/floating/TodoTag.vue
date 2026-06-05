@@ -105,7 +105,7 @@ function handleEnd() {
   pointer-events: none;
 }
 
-/* 新创建的 TODO 动画 - 向下展开，推动下方按钮和边框 */
+/* 新创建的 TODO 动画 - 从上往下展开，推动下方按钮和边框 */
 .todo-new {
   animation: todoExpand 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;

@@ -18,7 +18,7 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
   let isAnimating = false
 
   // 动画期间主动驱动 resize（fire-and-forget，不等待 API 返回）
-  // 只调整高度，不改变位置
+  // 同时锚定右上角，避免窗口水平跳动
   function resizeImmediate() {
     const el = containerRef.value
     if (!el) return
@@ -27,8 +27,20 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
     const contentHeight = Math.ceil(rect.height)
     const contentWidth = Math.max(Math.ceil(rect.width), 280)
     const finalHeight = Math.max(contentHeight, 120)
-    // fire-and-forget，只改大小不改位置
-    win.setSize(new LogicalSize(contentWidth, finalHeight)).catch(() => {})
+
+    // 获取当前窗口尺寸，计算右上角锚点
+    win.outerSize().then(currentSize => {
+      win.outerPosition().then(currentPos => {
+        // 右上角 = 当前位置 + 当前宽度
+        const rightTopX = currentPos.x + currentSize.width
+        // 新位置 = 右上角 - 新宽度（保持右边缘不动）
+        const newX = rightTopX - contentWidth
+        win.setSize(new LogicalSize(contentWidth, finalHeight)).catch(() => {})
+        if (newX !== currentPos.x) {
+          win.setPosition(new LogicalPosition(newX, currentPos.y)).catch(() => {})
+        }
+      })
+    })
   }
 
   function onAnimStart() {
@@ -65,8 +77,6 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
       const contentHeight = Math.ceil(rect.height)
       const contentWidth = Math.max(Math.ceil(rect.width), 280)
 
-      logWithSource('info', 'useAutoResize[floating]', `内容尺寸: ${contentWidth}x${contentHeight}`)
-
       // 设置最小高度，避免窗口太小
       const minHeight = 120
       const finalHeight = Math.max(contentHeight, minHeight)
@@ -74,8 +84,6 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
       // 获取当前窗口位置和大小
       const currentSize = await win.outerSize()
       const currentPos = await win.outerPosition()
-
-      logWithSource('info', 'useAutoResize[floating]', `当前窗口: 位置=(${currentPos.x}, ${currentPos.y}), 尺寸=${currentSize.width}x${currentSize.height}`)
 
       // 获取屏幕尺寸（用于限制窗口位置）
       const screenWidth = window.screen.width
@@ -94,14 +102,10 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
       newX = Math.max(10, Math.min(newX, screenWidth - contentWidth - 10))
       newY = Math.max(10, Math.min(newY, screenHeight - finalHeight - 10))
 
-      logWithSource('info', 'useAutoResize[floating]', `屏幕尺寸: ${screenWidth}x${screenHeight}`)
-      logWithSource('info', 'useAutoResize[floating]', `调整窗口: 新尺寸=${contentWidth}x${finalHeight}, 新位置=(${newX}, ${newY})`)
-
       // 调整窗口大小和位置
       await win.setSize(new LogicalSize(contentWidth, finalHeight))
       await win.setPosition(new LogicalPosition(newX, newY))
 
-      logWithSource('info', 'useAutoResize[floating]', '窗口调整完成')
     } catch (e) {
       logWithSource('error', 'useAutoResize[floating]', `调整窗口大小失败: ${e}`)
     }
