@@ -65,11 +65,17 @@ pub fn create_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                 log::info!("托盘双击事件");
                 let app = tray.app_handle();
                 if let Some(window) = app.get_webview_window("management") {
-                    if window.is_visible().unwrap_or(false) {
+                    let is_visible = window.is_visible().unwrap_or(false);
+                    let is_minimized = window.is_minimized().unwrap_or(false);
+
+                    if is_visible && !is_minimized {
                         log::info!("隐藏管理界面");
                         let _ = window.hide();
                     } else {
                         log::info!("显示管理界面");
+                        if is_minimized {
+                            let _ = window.unminimize();
+                        }
                         let _ = window.show();
                         let _ = window.set_focus();
                     }
