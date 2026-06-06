@@ -296,14 +296,6 @@ function handleTodoNotesCancel() {
 </template>
 
 <style scoped>
-/* 透明区域点击穿透：根容器不接收鼠标事件，内容区域接收 */
-.floating-root {
-  pointer-events: none;
-}
-.floating-root > * {
-  pointer-events: auto;
-}
-
 /* 未固定状态：显示边框 */
 .floating-unpinned {
   border: 2px solid rgba(200, 200, 200, 0.6);

@@ -9,7 +9,7 @@ import { logWithSource } from '@/utils/logger'
  * 原理：
  * 1. 监测内容容器的大小变化
  * 2. 动态调整窗口大小，只覆盖有内容的区域
- * 3. 透明区域不存在，点击自然穿透到下方窗口
+ * 3. 透明区域不存在，窗口外的点击自然落到下方窗口
  *
  * 策略：
  * - 非动画时：ResizeObserver + debounce 调整大小
