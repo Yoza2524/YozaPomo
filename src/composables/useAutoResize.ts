@@ -115,12 +115,30 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
     resizeObserver = new ResizeObserver(onResize)
     resizeObserver.observe(el)
 
-    // 动画事件：用计数器跟踪嵌套动画，动画期间由 rAF 驱动 resize
+    // 动画/过渡事件：用计数器跟踪，期间由 rAF 驱动 resize
     el.addEventListener('animationstart', () => {
       animCount++
       startAnimLoop()
     })
     el.addEventListener('animationend', () => {
+      animCount = Math.max(0, animCount - 1)
+      if (animCount === 0) {
+        stopAnimLoop()
+        resizeImmediate()
+      }
+    })
+    el.addEventListener('transitionstart', () => {
+      animCount++
+      startAnimLoop()
+    })
+    el.addEventListener('transitionend', () => {
+      animCount = Math.max(0, animCount - 1)
+      if (animCount === 0) {
+        stopAnimLoop()
+        resizeImmediate()
+      }
+    })
+    el.addEventListener('transitioncancel', () => {
       animCount = Math.max(0, animCount - 1)
       if (animCount === 0) {
         stopAnimLoop()

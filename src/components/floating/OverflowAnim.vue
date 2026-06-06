@@ -28,10 +28,12 @@ function onAnimEnd() {
 </template>
 
 <style scoped>
+/* 定位在省略号上方（bottom: TAG_H + gap = 48px），tag 从上方出现后向下融入省略号 */
 .overflow-anim {
   position: absolute;
   left: 0;
   right: 0;
+  bottom: 48px;
   height: 0;
   overflow: visible;
   display: flex;
@@ -46,30 +48,30 @@ function onAnimEnd() {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.6);
   border: 1.5px solid rgba(229, 231, 235, 0.5);
-  animation: tagFall 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: tagFall 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .overflow-tag.merge-mode {
-  animation: tagFallMerge 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: tagFallMerge 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Tag 出现后向下移动到省略号位置并消失 */
+/* Tag 从上方出现，向下移动到省略号位置并消失 */
 @keyframes tagFall {
   0% {
     opacity: 0;
-    transform: translateY(-6px) scale(0.6);
+    transform: translateY(-8px) scale(0.5);
   }
-  25% {
+  20% {
     opacity: 0.9;
     transform: translateY(0) scale(0.85);
   }
   70% {
     opacity: 0.5;
-    transform: translateY(14px) scale(0.3);
+    transform: translateY(40px) scale(0.3);
   }
   100% {
     opacity: 0;
-    transform: translateY(18px) scale(0.1);
+    transform: translateY(48px) scale(0.1);
   }
 }
 
@@ -77,7 +79,7 @@ function onAnimEnd() {
 @keyframes tagFallMerge {
   0% {
     opacity: 0;
-    transform: translateY(-6px) scale(0.6);
+    transform: translateY(-8px) scale(0.5);
   }
   20% {
     opacity: 0.9;
@@ -85,7 +87,7 @@ function onAnimEnd() {
   }
   100% {
     opacity: 0;
-    transform: translateY(14px) scale(0);
+    transform: translateY(48px) scale(0);
   }
 }
 </style>

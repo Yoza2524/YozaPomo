@@ -175,6 +175,6 @@ pub fn delete_todo(app: tauri::AppHandle, db: State<Database>, id: String) -> Re
     let conn = db.conn()?;
     conn.execute("DELETE FROM todos WHERE id = ?1", rusqlite::params![id])
         .map_err(|e| e.to_string())?;
-    let _ = app.emit("todo-changed", ());
+    let _ = app.emit("todo-deleted", &id);
     Ok(())
 }

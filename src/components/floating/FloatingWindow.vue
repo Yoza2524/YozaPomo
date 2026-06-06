@@ -13,6 +13,7 @@ import { playFocusEndSound, playReminderSound } from '@/utils/sound'
 import { emitTo } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
 import { useAutoResize } from '@/composables/useAutoResize'
+import { useContentHeight } from '@/composables/useContentHeight'
 import { logWithSource } from '@/utils/logger'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { PhysicalPosition } from '@tauri-apps/api/window'
@@ -28,14 +29,24 @@ const isPinned = computed(() => settingsStore.floatingPinned)
 const contentRef = ref<HTMLElement | null>(null)
 const { immediateResize } = useAutoResize(contentRef)
 
+// 计算式内容高度（根据 todo 数量预计算，替代 ResizeObserver 响应式方案）
+const todoCount = computed(() => todoStore.todayTodos.length)
+const { targetHeight } = useContentHeight({
+  todoCount,
+  maxDisplay: computed(() => settingsStore.todoDisplayCount),
+})
+
 // 笔记弹窗状态
 const showTodoNotes = ref(false)
 const pendingTodoId = ref<string | null>(null)
+// 粉碎动画：标记正在粉碎的 TODO，动画结束后才从列表移除
+const shatterTodoId = ref<string | null>(null)
 
 // 跨窗口事件同步
 let unlistenTodoChanged: UnlistenFn | null = null
 let unlistenSettingsChanged: UnlistenFn | null = null
 let unlistenUnpin: UnlistenFn | null = null
+let unlistenTodoDeleted: UnlistenFn | null = null
 
 onMounted(async () => {
   try {
@@ -63,6 +74,11 @@ onMounted(async () => {
     }
   })
 
+  // 监听管理界面删除 TODO，播放粉碎动画
+  unlistenTodoDeleted = await listen<string>('todo-deleted', (event) => {
+    shatterTodoId.value = event.payload
+  })
+
   // 监听设置变更，重新加载设置
   unlistenSettingsChanged = await listen('settings-changed', () => {
     settingsStore.loadSettings()
@@ -88,6 +104,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (unlistenTodoChanged) unlistenTodoChanged()
+  if (unlistenTodoDeleted) unlistenTodoDeleted()
   if (unlistenSettingsChanged) unlistenSettingsChanged()
   if (unlistenUnpin) unlistenUnpin()
   stopReminderInputDetection()
@@ -224,6 +241,12 @@ async function handleTodoNotesConfirm(notes: string) {
   pendingTodoId.value = null
 }
 
+/** 粉碎动画结束 → 刷新列表（删除场景） */
+async function handleShatterDone(_todoId: string) {
+  await todoStore.fetchTodayTodos()
+  shatterTodoId.value = null
+}
+
 /** TODO 备注取消 */
 function handleTodoNotesCancel() {
   showTodoNotes.value = false
@@ -235,8 +258,9 @@ function handleTodoNotesCancel() {
 <template>
   <div
     ref="contentRef"
-    class="floating-root w-full h-full flex flex-col select-none overflow-hidden rounded-[16px] relative"
+    class="floating-root w-full flex flex-col select-none overflow-hidden rounded-[16px] relative"
     :class="{ 'floating-pinned': isPinned, 'floating-unpinned': !isPinned }"
+    :style="{ height: targetHeight + 'px', transition: 'height 400ms cubic-bezier(0.4, 0, 0.2, 1)' }"
     @contextmenu.prevent
   >
     <!-- 可拖拽标题栏（固定时禁用拖拽） -->
@@ -271,9 +295,11 @@ function handleTodoNotesCancel() {
         :max-display="settingsStore.todoDisplayCount"
         :loading="todoStore.loading"
         :new-todo-id="todoStore.newTodoId"
+        :shatter-todo-id="shatterTodoId"
         @start="handleTodoStart"
         @end-focus="handleEndFocus"
         @end="handleTodoEnd"
+        @shatter-done="handleShatterDone"
       />
     </div>
 
