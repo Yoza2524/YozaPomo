@@ -54,7 +54,7 @@ function handleEnd() {
 
 <template>
   <div
-    :class="[tagClass, 'todo-tag rounded-xl px-3 py-2 mb-2 transition-all duration-300 select-none overflow-hidden', { 'todo-new': isNew && !isOverflow, 'todo-new-overflow': isNew && isOverflow }]"
+    :class="[tagClass, 'todo-tag rounded-xl px-3 py-2 mb-2 transition-all duration-300 select-none', { 'overflow-hidden': !isActive, 'todo-new': isNew && !isOverflow, 'todo-new-overflow': isNew && isOverflow }]"
     @dblclick="handleDoubleClick"
     @contextmenu="handleContextMenu"
   >
@@ -93,12 +93,13 @@ function handleEnd() {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-/* 激活/专注中 — 呼吸灯 */
+/* 激活/专注中 — 增强呼吸灯 */
 .todo-active {
   background: rgba(255, 255, 255, 0.95);
-  border: 2px solid #22c55e;
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.25);
-  animation: breathe 2s ease-in-out infinite;
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+  animation: breathe 3s ease-in-out infinite;
 }
 
 /* 其他 TODO 在专注中 — 不可交互 */
@@ -146,12 +147,19 @@ function handleEnd() {
   }
 }
 
+/* 更自然的呼吸动画 - 对称式节奏 + 平滑过渡 */
 @keyframes breathe {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  0% {
+    border-color: #a1cab0;
+    box-shadow: 0 0 0px rgba(34, 197, 94, 0.2), 0 0 0 0 rgba(34, 197, 94, 0);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    border-color: #22c55e;
+    box-shadow: 0 0 0px rgba(34, 197, 94, 0.6), 0 0 0 2px rgba(34, 197, 94, 0.2);
+  }
+  100% {
+    border-color: #a1cab0;
+    box-shadow: 0 0 0px rgba(34, 197, 94, 0.2), 0 0 0 0 rgba(34, 197, 94, 0);
   }
 }
 </style>
