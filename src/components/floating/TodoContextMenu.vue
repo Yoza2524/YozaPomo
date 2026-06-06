@@ -1,5 +1,7 @@
 <script setup lang="ts">
-defineProps<{
+import { ref, computed, onMounted, nextTick } from 'vue'
+
+const props = defineProps<{
   x: number
   y: number
   isActive: boolean
@@ -7,9 +9,26 @@ defineProps<{
 
 const emit = defineEmits<{
   start: []
+  endFocus: []
   end: []
   close: []
 }>()
+
+const menuRef = ref<HTMLElement | null>(null)
+const menuWidth = ref(120)
+
+onMounted(async () => {
+  await nextTick()
+  if (menuRef.value) {
+    menuWidth.value = menuRef.value.offsetWidth
+  }
+})
+
+const menuStyle = computed(() => {
+  const maxX = window.innerWidth - menuWidth.value - 10
+  const left = Math.min(props.x, maxX)
+  return { left: left + 'px', top: props.y + 'px' }
+})
 </script>
 
 <template>
@@ -18,8 +37,9 @@ const emit = defineEmits<{
 
   <!-- 菜单面板 -->
   <div
+    ref="menuRef"
     class="fixed z-50 bg-white/95 backdrop-blur-md rounded-xl shadow-lg border border-gray-100 py-1 min-w-[120px] animate-scale-in"
-    :style="{ left: x + 'px', top: y + 'px' }"
+    :style="menuStyle"
   >
     <!-- 开始专注（未激活） -->
     <button
@@ -30,15 +50,24 @@ const emit = defineEmits<{
       <span class="w-4 text-center">▶</span> 开始专注
     </button>
 
+    <!-- 结束专注（激活中） -->
+    <button
+      v-if="isActive"
+      class="w-full text-left px-3 py-1.5 text-sm text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2"
+      @click="emit('endFocus'); emit('close')"
+    >
+      <span class="w-4 text-center">⏸</span> 结束专注
+    </button>
+
     <!-- 分割线 -->
     <div class="border-t border-gray-100 my-1" />
 
-    <!-- 结束 TODO -->
+    <!-- 完成待办 -->
     <button
-      class="w-full text-left px-3 py-1.5 text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
+      class="w-full text-left px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 transition-colors flex items-center gap-2"
       @click="emit('end'); emit('close')"
     >
-      <span class="w-4 text-center">✕</span> 结束 TODO
+      <span class="w-4 text-center">✓</span> 完成待办
     </button>
   </div>
 </template>

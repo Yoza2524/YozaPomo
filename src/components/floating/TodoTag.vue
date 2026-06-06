@@ -75,6 +75,7 @@ function handleEnd() {
         :y="menuY"
         :is-active="isActive"
         @start="emit('start', todo); showMenu = false"
+        @end-focus="emit('endFocus'); showMenu = false"
         @end="handleEnd(); showMenu = false"
         @close="showMenu = false"
       />
