@@ -20,6 +20,7 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
   let animationFrame: number | null = null
   let animCount = 0 // 正在进行的动画数量
+  let listenerAbortController: AbortController | null = null
 
   function resizeImmediate() {
     const el = containerRef.value
@@ -116,40 +117,48 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
     resizeObserver.observe(el)
 
     // 动画/过渡事件：用计数器跟踪，期间由 rAF 驱动 resize
+    // 使用 AbortController 统一管理生命周期，onUnmounted 时批量移除
+    const ac = new AbortController()
+    listenerAbortController = ac
+    const opts = { signal: ac.signal }
     el.addEventListener('animationstart', () => {
       animCount++
       startAnimLoop()
-    })
+    }, opts)
     el.addEventListener('animationend', () => {
       animCount = Math.max(0, animCount - 1)
       if (animCount === 0) {
         stopAnimLoop()
         resizeImmediate()
       }
-    })
+    }, opts)
     el.addEventListener('transitionstart', () => {
       animCount++
       startAnimLoop()
-    })
+    }, opts)
     el.addEventListener('transitionend', () => {
       animCount = Math.max(0, animCount - 1)
       if (animCount === 0) {
         stopAnimLoop()
         resizeImmediate()
       }
-    })
+    }, opts)
     el.addEventListener('transitioncancel', () => {
       animCount = Math.max(0, animCount - 1)
       if (animCount === 0) {
         stopAnimLoop()
         resizeImmediate()
       }
-    })
+    }, opts)
   })
 
   onUnmounted(() => {
     logWithSource('info', 'useAutoResize[floating]', '清理自动调整大小')
     stopAnimLoop()
+    if (listenerAbortController) {
+      listenerAbortController.abort()
+      listenerAbortController = null
+    }
     if (resizeObserver) {
       resizeObserver.disconnect()
       resizeObserver = null
