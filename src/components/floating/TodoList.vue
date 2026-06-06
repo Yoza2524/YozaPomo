@@ -58,6 +58,9 @@ const appearCompleted = ref(false)
 watch(() => props.shatterTodoId, (id) => {
   if (!id) return
 
+  // 重置上一次可能仍在运行的动画状态（防止连续删除时旧 fallback timer 污染新动画）
+  resetAnimState()
+
   // 检查被删除的 todo 是否还在列表中（todoStore 可能已经刷新）
   const todoInList = props.todos.some(t => t.id === id)
   if (!todoInList) {
@@ -81,17 +84,24 @@ watch(() => props.shatterTodoId, (id) => {
       appearingTodoId.value = hiddenTodos.value[0].id
     }
   } else {
-    // === 隐藏项删除：粒子 → 省略号渐隐 ===
+    // === 隐藏项删除 ===
     showEllipsisParticles.value = true
-    ellipsisFadingOut.value = true
 
-    // 阶段1：粒子动画 400ms（期间省略号文字保持可见）
-    // 阶段2：省略号渐隐 400ms（CSS transition opacity 0.4s）
-    // 总计 800ms 后清理状态
-    collapseFallbackTimer.value = setTimeout(() => {
-      emit('shatterDone', id)
-      resetAnimState()
-    }, 800)
+    const isLastHidden = hiddenTodos.value.length <= 1
+    if (isLastHidden) {
+      // 最后一个隐藏项：粒子 + 省略号渐隐
+      ellipsisFadingOut.value = true
+      collapseFallbackTimer.value = setTimeout(() => {
+        emit('shatterDone', id)
+        resetAnimState()
+      }, 800)
+    } else {
+      // 非最后一个隐藏项：只播粒子，省略号保留
+      collapseFallbackTimer.value = setTimeout(() => {
+        emit('shatterDone', id)
+        resetAnimState()
+      }, 400)
+    }
     return
   }
 
