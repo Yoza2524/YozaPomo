@@ -342,7 +342,7 @@ async function openManagement() {
 
 /* "暂无待办"容器：固定一个 Tag 高度 */
 .empty-placeholder {
-  height: 40px;
+  height: 48px;
   margin-bottom: 8px;
 }
 

@@ -184,7 +184,7 @@ defineExpose({ startShatter, isShattering })
     ref="tagRef"
     :class="[
       tagClass,
-      'todo-tag rounded-xl px-3 py-2 mb-2 select-none',
+      'todo-tag rounded-xl px-3 py-2 h-12 mb-2 select-none',
       {
         'overflow-hidden': !isShattering && !collapsing && !appearing,
         'todo-new': isNew && !isOverflow,
@@ -314,7 +314,7 @@ defineExpose({ startShatter, isShattering })
     transform: translateY(-2px) scale(1.05);
   }
   100% {
-    height: 40px;
+    height: 48px;
     margin-bottom: 8px;
     padding-top: 8px;
     padding-bottom: 8px;
@@ -339,7 +339,7 @@ defineExpose({ startShatter, isShattering })
   }
   100% {
     opacity: 1;
-    height: 40px;
+    height: 48px;
     margin-bottom: 8px;
     padding-top: 8px;
     padding-bottom: 8px;

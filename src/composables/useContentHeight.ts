@@ -5,8 +5,8 @@ import { computed, type Ref } from 'vue'
  * 与实际 CSS 精确对应，用于预计算窗口高度
  */
 const TITLE_BAR_H = 40   // py-2(8+8) + pin-btn(24)
-const TAG_H = 48          // 40px 内容 + 8px mb-2
-const PLACEHOLDER_H = 48  // 40px + 8px mb-2（与单个 Tag 等高）
+const TAG_H = 56          // h-12(48) + mb-2(8) = 56px，与 PLACEHOLDER 等高
+const PLACEHOLDER_H = 56  // 48px + 8px mb-2（与单个 Tag 等高）
 const ELLIPSIS_H = 22     // 18px 文字 + 2px mt + 2px padding
 const BUTTON_AREA_H = 64  // pb-4(16) + pt-2(8) + button(40)
 const MIN_H = 120         // 窗口最小高度
