@@ -186,7 +186,7 @@ defineExpose({ startShatter, isShattering })
       tagClass,
       'todo-tag rounded-xl px-3 py-2 mb-2 select-none',
       {
-        'overflow-hidden': !isActive && !isShattering && !collapsing && !appearing,
+        'overflow-hidden': !isShattering && !collapsing && !appearing,
         'todo-new': isNew && !isOverflow,
         'todo-new-overflow': isNew && isOverflow,
         'todo-shattering': isShattering,

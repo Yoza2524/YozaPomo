@@ -226,7 +226,7 @@ async function openManagement() {
 
     <template v-else>
       <!-- TODO 列表 + 空状态（justify-end 让内容从底部向上生长，省略号锚定不动） -->
-      <div class="relative h-full flex flex-col justify-end">
+      <div class="relative h-full flex flex-col justify-end pt-1">
         <!-- "暂无待办"：无 TODO 或最后一个正在收起时同步显示 -->
         <Transition :name="isLastTagCollapsing ? 'fade-sync' : 'fade'">
           <div
