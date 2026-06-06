@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { Todo } from '@/types/todo'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import type { UnlistenFn } from '@tauri-apps/api/event'
 import TodoContextMenu from './TodoContextMenu.vue'
 
 const props = defineProps<{
@@ -23,6 +25,17 @@ const emit = defineEmits<{
 const showMenu = ref(false)
 const menuX = ref(0)
 const menuY = ref(0)
+
+// 窗口失焦时关闭右键菜单
+let unlistenFocusChanged: UnlistenFn | null = null
+onMounted(async () => {
+  unlistenFocusChanged = await getCurrentWindow().onFocusChanged(({ payload }) => {
+    if (!payload) showMenu.value = false
+  })
+})
+onUnmounted(() => {
+  unlistenFocusChanged?.()
+})
 
 const tagClass = computed(() => {
   if (props.isActive) return 'todo-active'
