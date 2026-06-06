@@ -278,7 +278,7 @@ function handleTodoNotesCancel() {
     </div>
 
     <!-- 底部操作区 -->
-    <div class="px-4 pb-4 pt-2 shrink-0">
+    <div class="px-3 pb-4 pt-2 shrink-0">
       <FocusButton :disabled="false" />
     </div>
 

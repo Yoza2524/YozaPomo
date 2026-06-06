@@ -91,14 +91,14 @@ async function handleClick() {
 
 .button-row {
   display: flex;
-  gap: 8px;
   height: 40px;
+  width: 100%;
 }
 
 /* 按钮 */
 .action-button {
   height: 40px;
-  border-radius: 8px;
+  border-radius: 12px;
   color: white;
   font-size: 14px;
   font-weight: 500;
@@ -146,7 +146,7 @@ async function handleClick() {
 .countdown-block {
   width: 0;
   height: 40px;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -164,8 +164,14 @@ async function handleClick() {
 
 /* 显示时 */
 .countdown-block.show {
-  width: calc(50% - 4px);
+  width: 50%;
+  margin-left: 8px;
   opacity: 1;
+}
+
+/* 按钮宽度补偿 — 倒计时块出现时按钮缩窄，留出 margin 空间 */
+.action-button.active {
+  width: 50%;
 }
 
 /* 颜色 */
