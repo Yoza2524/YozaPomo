@@ -29,14 +29,20 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
     const rect = el.getBoundingClientRect()
     const contentHeight = Math.ceil(rect.height)
     const contentWidth = Math.max(Math.ceil(rect.width), 280)
+    // 容器尺寸为 0 说明尚未完成首次渲染，跳过避免窗口被调到极小尺寸
+    if (contentHeight === 0) return
     const finalHeight = Math.max(contentHeight, 120)
 
     Promise.all([win.outerSize(), win.outerPosition()]).then(([currentSize, currentPos]) => {
-      const rightTopX = currentPos.x + currentSize.width
+      // outerPosition/outerSize 返回物理坐标，需转换为逻辑坐标
+      const scale = window.devicePixelRatio || 1
+      const logicalX = currentPos.x / scale
+      const logicalY = currentPos.y / scale
+      const rightTopX = logicalX + (currentSize.width / scale)
       const newX = rightTopX - contentWidth
       win.setSize(new LogicalSize(contentWidth, finalHeight)).catch(() => {})
-      if (newX !== currentPos.x) {
-        win.setPosition(new LogicalPosition(newX, currentPos.y)).catch(() => {})
+      if (Math.round(newX) !== Math.round(logicalX)) {
+        win.setPosition(new LogicalPosition(newX, logicalY)).catch(() => {})
       }
     })
   }
@@ -82,14 +88,19 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
       const rect = el.getBoundingClientRect()
       const contentHeight = Math.ceil(rect.height)
       const contentWidth = Math.max(Math.ceil(rect.width), 280)
+      if (contentHeight === 0) return
       const finalHeight = Math.max(contentHeight, 120)
       const currentSize = await win.outerSize()
       const currentPos = await win.outerPosition()
+      // outerPosition/outerSize 返回物理坐标，需转换为逻辑坐标
+      const scale = window.devicePixelRatio || 1
       const screenWidth = window.screen.width
       const screenHeight = window.screen.height
-      const rightTopX = currentPos.x + currentSize.width
+      const logicalX = currentPos.x / scale
+      const logicalY = currentPos.y / scale
+      const rightTopX = logicalX + (currentSize.width / scale)
       let newX = rightTopX - contentWidth
-      let newY = currentPos.y
+      let newY = logicalY
       newX = Math.max(10, Math.min(newX, screenWidth - contentWidth - 10))
       newY = Math.max(10, Math.min(newY, screenHeight - finalHeight - 10))
 
@@ -107,10 +118,10 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
       return
     }
 
-    logWithSource('info', 'useAutoResize[floating]', '初始化自动调整大小')
-
-    // 初始调整
-    updateWindowSize()
+    // 初始调整（延迟确保首次渲染完成后再读取容器尺寸）
+    requestAnimationFrame(() => {
+      resizeImmediate()
+    })
 
     // 监测内容大小变化
     resizeObserver = new ResizeObserver(onResize)
@@ -153,7 +164,6 @@ export function useAutoResize(containerRef: Ref<HTMLElement | null>) {
   })
 
   onUnmounted(() => {
-    logWithSource('info', 'useAutoResize[floating]', '清理自动调整大小')
     stopAnimLoop()
     if (listenerAbortController) {
       listenerAbortController.abort()

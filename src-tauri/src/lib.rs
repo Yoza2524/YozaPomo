@@ -44,14 +44,19 @@ fn setup_windows(app: &mut tauri::App) {
                 logical_width, logical_height);
             log::info!("悬浮窗定位: 逻辑坐标=({}, {})", x, y);
 
-            let _ = floating.set_position(LogicalPosition::new(x, y));
+            if let Err(e) = floating.set_position(LogicalPosition::new(x, y)) {
+                log::error!("悬浮窗定位失败: {}", e);
+            }
         } else {
             log::error!("无法获取主显示器信息！");
         }
 
         // 定位完成后再显示窗口（避免闪烁）
-        let _ = floating.show();
-        log::info!("悬浮窗已显示");
+        if let Err(e) = floating.show() {
+            log::error!("悬浮窗显示失败: {}", e);
+        } else {
+            log::info!("悬浮窗已显示");
+        }
     } else {
         log::warn!("未找到悬浮窗 (label='floating')");
     }
